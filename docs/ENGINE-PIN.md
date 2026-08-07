@@ -1,21 +1,35 @@
-# Engine + bridge pin (D5 kickoff)
+# Engine + bridge pin (D5)
 
-**Status:** Kickoff · **Updated:** 2026-08-07  
-**Upstream:** [HolagundiWorks/AQC](https://github.com/HolagundiWorks/AQC) `main`
+**Status:** Pin ready Â· **Updated:** 2026-08-07  
+**Upstream:** [HolagundiWorks/AQC](https://github.com/HolagundiWorks/AQC)  
+**Baseline:** tag `aorms-bridge-d2` Â· commit `1184390`
 
 ## Pin
 
 | Artifact | How to consume |
 | --- | --- |
-| C++ `bbs_engine` | Submodule or copy from AQC `BBSDesktop/src` — **do not fork the engine** |
-| `Aorms.Bridge` | ProjectReference / package from AQC `BBSDesktop/Aorms.Bridge` ([PR #5 merged](https://github.com/HolagundiWorks/AQC/pull/5)) |
-| Wire contract | esti [PORTAL-SYNC-BRIDGE](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/PORTAL-SYNC-BRIDGE.md) · HUB-API `2026-08` |
+| C++ `bbs_engine` | Submodule or copy from AQC `BBSDesktop/src` â€” **do not fork the engine** |
+| `Aorms.Bridge` | ProjectReference to AQC `BBSDesktop/Aorms.Bridge` at tag `aorms-bridge-d2` |
+| Wire contract | esti [PORTAL-SYNC-BRIDGE](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/PORTAL-SYNC-BRIDGE.md) Â· HUB-API `2026-08` |
+
+## Submodule (recommended)
+
+```bash
+git submodule add https://github.com/HolagundiWorks/AQC.git vendor/AQC
+cd vendor/AQC && git checkout aorms-bridge-d2
+```
+
+Then in the WinUI `.csproj`:
+
+```xml
+<ProjectReference Include="..\..\vendor\AQC\BBSDesktop\Aorms.Bridge\Aorms.Bridge.csproj" />
+```
 
 ## Next (this repo)
 
-1. Add AQC as git submodule or NuGet/local ProjectReference path.  
-2. WinUI shell fork (branding AStudio).  
+1. Add submodule at `aorms-bridge-d2`.  
+2. WinUI shell fork (branding AStudio / AConsulting).  
 3. Call `AormsBridgeHost`-style activate/Flush on publish actions.  
-4. Local AI (ESTI) — desktop only.
+4. Local AI (ESTI) â€” desktop only.
 
 Open source; SaaS licensing deferred.
