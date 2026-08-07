@@ -4,42 +4,64 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="AStudio">
 
-    <Grid Padding="24" RowSpacing="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer>
+        <Grid Padding="24" RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <StackPanel Spacing="4">
-            <TextBlock Text="AStudio" FontSize="28" FontWeight="SemiBold"/>
-            <TextBlock Text="Accelerated Studio — architecture desktop (D5 shell)"
-                       Opacity="0.7"/>
-        </StackPanel>
-
-        <Border Grid.Row="1" Padding="16" CornerRadius="8"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Hub bridge" FontWeight="SemiBold"/>
-                <TextBlock x:Name="HubStatusText" TextWrapping="Wrap"/>
-                <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
+            <StackPanel Spacing="4">
+                <TextBlock Text="AStudio" FontSize="28" FontWeight="SemiBold"/>
+                <TextBlock Text="Practice manager — Tasks · Office · HR (suite)"
+                           Opacity="0.7"/>
             </StackPanel>
-        </Border>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
-            <TextBox x:Name="LicenseKeyBox" Width="280" PlaceholderText="License key (HLP-…)"
-                     Header="Activate"/>
-            <Button Content="Activate" Click="Activate_Click" VerticalAlignment="Bottom"/>
-            <Button Content="Enqueue smoke meta" Click="Enqueue_Click" VerticalAlignment="Bottom"/>
-            <Button Content="Flush" Click="Flush_Click" VerticalAlignment="Bottom"/>
-            <Button Content="Refresh status" Click="Refresh_Click" VerticalAlignment="Bottom"/>
-        </StackPanel>
+            <Border Grid.Row="1" Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Hub bridge" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="HubStatusText" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
+                </StackPanel>
+            </Border>
 
-        <TextBlock Grid.Row="3"
-                   Text="Engine + domain UI come next. This shell proves WinUI + Aorms.Bridge ProjectReference on this machine."
-                   Opacity="0.6" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
-    </Grid>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                <TextBox x:Name="LicenseKeyBox" Width="280" PlaceholderText="License key (HLP-…)"
+                         Header="Activate"/>
+                <Button Content="Activate" Click="Activate_Click" VerticalAlignment="Bottom"/>
+                <Button Content="Flush meta" Click="Flush_Click" VerticalAlignment="Bottom"/>
+                <Button Content="Refresh" Click="Refresh_Click" VerticalAlignment="Bottom"/>
+            </StackPanel>
+
+            <Border Grid.Row="3" Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Tasks" FontWeight="SemiBold"/>
+                    <TextBlock Text="Local firm.db → publish to Mongo ops (/api/ops/tasks)" Opacity="0.7" FontSize="12"/>
+                    <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
+                    <TextBox x:Name="TaskProjectBox" Header="Project id (UUID)"
+                             Text="00000000-0000-0000-0000-000000000001"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Save local" Click="SaveTaskLocal_Click"/>
+                        <Button Content="Publish to hub" Click="PublishTask_Click"/>
+                        <Button Content="Reload list" Click="ReloadTasks_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Grid.Row="5"
+                       Text="Office · HR · Payroll modules come next. Technical calc lives in AQC Estimation / BBS / PM."
+                       Opacity="0.6" TextWrapping="Wrap"/>
+        </Grid>
+    </ScrollViewer>
 </Window>

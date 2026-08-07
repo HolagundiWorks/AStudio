@@ -14,6 +14,7 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = false;
         _bridge = AormsBridgeHost.CreateFromEnvironment();
         RefreshStatus("Ready.");
+        ReloadTasks_Click(this, new RoutedEventArgs());
     }
 
     void RefreshStatus(string? note = null)
@@ -48,19 +49,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    void Enqueue_Click(object sender, RoutedEventArgs e)
-    {
-        var id = _bridge.EnqueueMeta("phaseProgress", "astudio-shell-1", new Dictionary<string, object?>
-        {
-            ["projectId"] = "00000000-0000-0000-0000-000000000001",
-            ["phaseId"] = "astudio-shell-1",
-            ["pctComplete"] = 10,
-            ["status"] = "IN_PROGRESS",
-            ["source"] = "AStudio.App",
-        });
-        RefreshStatus($"Enqueued meta id={id}");
-    }
-
     async void Flush_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -76,5 +64,53 @@ public sealed partial class MainWindow : Window
         {
             RefreshStatus($"Flush failed: {ex.Message}");
         }
+    }
+
+    void SaveTaskLocal_Click(object sender, RoutedEventArgs e)
+    {
+        var title = TaskTitleBox.Text?.Trim() ?? "";
+        var projectId = TaskProjectBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(projectId))
+        {
+            RefreshStatus("Task title and project id required.");
+            return;
+        }
+        var taskId = Guid.NewGuid().ToString("N")[..12];
+        _bridge.Db.UpsertLocalTask(taskId, projectId, title, "OPEN", "LOCAL");
+        TaskTitleBox.Text = "";
+        RefreshStatus($"Saved local task {taskId}");
+        ReloadTasks_Click(sender, e);
+    }
+
+    async void PublishTask_Click(object sender, RoutedEventArgs e)
+    {
+        var title = TaskTitleBox.Text?.Trim() ?? "";
+        var projectId = TaskProjectBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(projectId))
+        {
+            RefreshStatus("Task title and project id required.");
+            return;
+        }
+        var taskId = Guid.NewGuid().ToString("N")[..12];
+        try
+        {
+            LogText.Text = "Publishing task…";
+            await _bridge.PublishOpsTaskAsync(projectId, taskId, title, "OPEN");
+            TaskTitleBox.Text = "";
+            RefreshStatus($"Published task {taskId} to Mongo ops");
+            ReloadTasks_Click(sender, e);
+        }
+        catch (Exception ex)
+        {
+            RefreshStatus($"Publish failed: {ex.Message}");
+        }
+    }
+
+    void ReloadTasks_Click(object sender, RoutedEventArgs e)
+    {
+        var rows = _bridge.Db.ListLocalTasks();
+        TaskListText.Text = rows.Count == 0
+            ? "(no local tasks)"
+            : string.Join("\n", rows.Select(r => $"{r.TaskId}  {r.Status}/{r.PublishState}  {r.Title}"));
     }
 }
