@@ -11,3 +11,9 @@
 
 Upstream tracker: esti [ROADMAP.md](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/ROADMAP.md) D-waves.
 Open source until SaaS licensing is decided.
+
+
+## D5 — engine pin
+
+See [ENGINE-PIN.md](ENGINE-PIN.md). Aorms.Bridge landed on AQC main (PR #5).
+
