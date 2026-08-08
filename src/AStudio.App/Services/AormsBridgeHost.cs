@@ -7,19 +7,20 @@ namespace AStudio.App.Services;
 
 /// <summary>
 /// Factory for the AORMS hub bridge (firm.db under LocalAppData\AStudio).
-/// Env: ESTI_LICENSE_API_URL, ESTI_HUB_URL, ESTI_PRODUCT_API_KEY, INSTALL_ID.
+/// Imports AORMS Connect session.json when present (C2 SSO).
 /// </summary>
 public static class AormsBridgeHost
 {
     public static AormsBridge CreateFromEnvironment()
     {
+        var deviceId = Environment.GetEnvironmentVariable("INSTALL_ID")
+            ?? $"astudio-{Environment.MachineName}".ToLowerInvariant();
         var opt = new BridgeOptions
         {
             LicenseApiUrl = Environment.GetEnvironmentVariable("ESTI_LICENSE_API_URL") ?? "",
             HubUrl = Environment.GetEnvironmentVariable("ESTI_HUB_URL") ?? "http://127.0.0.1:4000",
             ProductApiKey = Environment.GetEnvironmentVariable("ESTI_PRODUCT_API_KEY") ?? "",
-            DeviceId = Environment.GetEnvironmentVariable("INSTALL_ID")
-                ?? $"astudio-{Environment.MachineName}".ToLowerInvariant(),
+            DeviceId = deviceId,
             DeviceName = "AStudio",
         };
         var dbPath = Path.Combine(
@@ -27,6 +28,8 @@ public static class AormsBridgeHost
             "AStudio",
             "firm.db");
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-        return new AormsBridge(opt, dbPath);
+        var bridge = new AormsBridge(opt, dbPath);
+        bridge.TryImportConnectSession(overwrite: true);
+        return bridge;
     }
 }
