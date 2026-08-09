@@ -1,14 +1,14 @@
 # AStudio WinUI shell (D5 + HCW geography)
 
-**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-09  
+**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-09 · wave **S2c**  
 **Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md)
 
 ## Chrome (HCW scaffold)
 
 ```text
 ┌─ Ribbon (Focus · Portfolio · Practice · Tasks) ─────────────┐
-├─ Stage (Fog Gray) — bridge Activate · Tasks ────────────────┤
-├─ ActionDock — Clear · Save local · Reload · Publish ────────┤
+├─ Stage (Fog Gray) — module panels ──────────────────────────┤
+├─ ActionDock — Clear · Save · Reload · Publish/Flush ────────┤
 └─ Status tray ───────────────────────────────────────────────┘
 ```
 
@@ -16,8 +16,14 @@
 - Dock zones: destroy LEFT · create CENTRE · commit RIGHT  
 - Local AI badge on ribbon — ESTI does **not** run on the hub  
 
-Domain modules (Office · HR · full IA) still land next; this shell replaces the
-bridge-smoke single scroll with one geography.
+| Ribbon | Stage |
+| --- | --- |
+| Portfolio | Local projects CRUD · Connect catalog import |
+| Focus | Selected project brief · `projectStatus` meta publish |
+| Practice | Hub Activate / Flush |
+| Tasks | Local tasks · ops publish |
+
+S2d = estimate/BBS via `bbs_engine`. Fees · drawings · delivery = S3.
 
 ## Build
 

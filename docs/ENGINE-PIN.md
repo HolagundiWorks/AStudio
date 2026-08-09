@@ -27,9 +27,9 @@ Then in the WinUI `.csproj`:
 
 ## Next (this repo)
 
-1. Add submodule at `aorms-bridge-d2`.  
-2. WinUI shell fork (branding AStudio / AConsulting).  
-3. Call `AormsBridgeHost`-style activate/Flush on publish actions.  
-4. Local AI (ESTI) â€” desktop only.
+1. Done: submodule at `aorms-bridge-d2`.  
+2. Done: WinUI shell + activate/Flush.  
+3. Now: S2c Portfolio/Focus — see [ROADMAP.md](ROADMAP.md).  
+4. Next: S2d P/Invoke `bbs_engine`; S4 local AI (ESTI) desktop only.
 
 Open source; SaaS licensing deferred.
