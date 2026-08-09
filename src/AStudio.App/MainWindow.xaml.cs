@@ -67,6 +67,11 @@ public sealed partial class MainWindow : Window
         StyleNav(NavPracticeBtn, module == ShellModule.Practice);
         StyleNav(NavTasksBtn, module == ShellModule.Tasks);
 
+        // Portfolio dock shows Import (≤5 total: Clear · Import · Save · Reload · Publish).
+        DockImportBtn.Visibility = module == ShellModule.Portfolio
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
         DockCreateBtn.Content = module switch
         {
             ShellModule.Portfolio => "Save project",
@@ -100,7 +105,32 @@ public sealed partial class MainWindow : Window
                 ReloadTasks();
                 break;
         }
+
+        UpdateDockEnabled();
     }
+
+    void UpdateDockEnabled()
+    {
+        var hasFocusProject = ResolveFocusProjectId() is not null;
+        switch (_module)
+        {
+            case ShellModule.Focus:
+                DockCreateBtn.IsEnabled = hasFocusProject;
+                DockCommitBtn.IsEnabled = hasFocusProject;
+                break;
+            case ShellModule.Portfolio:
+                DockCreateBtn.IsEnabled = true;
+                DockCommitBtn.IsEnabled = hasFocusProject || _selectedProjectId is not null
+                    || _projects.List().Count > 0;
+                break;
+            default:
+                DockCreateBtn.IsEnabled = true;
+                DockCommitBtn.IsEnabled = true;
+                break;
+        }
+    }
+
+    string? ResolveFocusProjectId() => _focusProjectId ?? _selectedProjectId;
 
     static void StyleNav(Button btn, bool active)
     {
@@ -181,7 +211,9 @@ public sealed partial class MainWindow : Window
         var rows = _projects.List();
         if (rows.Count == 0)
         {
-            ProjectListText.Text = "(no local projects — save one or import Connect catalog)";
+            ProjectListText.Text =
+                "(empty — save a project below, or Import from Connect above)";
+            UpdateDockEnabled();
             return;
         }
         ProjectListText.Text = string.Join("\n", rows.Select(r =>
@@ -191,37 +223,55 @@ public sealed partial class MainWindow : Window
         }));
         if (_selectedProjectId is null && rows.Count > 0)
             _selectedProjectId = rows[0].ProjectId;
+        UpdateDockEnabled();
     }
 
     void LoadFocusForm()
     {
-        var id = _focusProjectId ?? _selectedProjectId;
+        var id = ResolveFocusProjectId();
         if (id is null)
         {
-            FocusSubtitle.Text = "No project selected — open one from Portfolio.";
+            FocusSubtitle.Text = "No project in focus.";
+            FocusEmptyPanel.Visibility = Visibility.Visible;
+            FocusBriefPanel.Visibility = Visibility.Collapsed;
+            FocusEmptyCopy.Text =
+                "Open Portfolio, pick a local project (or Import from Connect), then Open selected in Focus. Save focus writes the brief; Publish status queues projectStatus meta to the hub.";
             FocusTitleBox.Text = "";
             FocusRefBox.Text = "";
             FocusStatusBox.Text = "";
             FocusPhaseBox.Text = "";
             FocusNotesBox.Text = "";
             FocusMetaText.Text = "";
+            UpdateDockEnabled();
             return;
         }
+
         var p = _projects.Get(id);
         if (p is null)
         {
             FocusSubtitle.Text = $"Missing project {id}";
+            FocusEmptyPanel.Visibility = Visibility.Visible;
+            FocusBriefPanel.Visibility = Visibility.Collapsed;
+            FocusEmptyCopy.Text =
+                $"Project {id} is no longer in firm.db. Return to Portfolio and pick another, or Import from Connect.";
+            _focusProjectId = null;
+            UpdateDockEnabled();
             return;
         }
+
         _focusProjectId = p.ProjectId;
-        FocusSubtitle.Text = $"{p.ProjectRef} · {p.PublishState}";
+        FocusEmptyPanel.Visibility = Visibility.Collapsed;
+        FocusBriefPanel.Visibility = Visibility.Visible;
+        FocusSubtitle.Text = $"{p.ProjectRef} · {p.Title}";
         FocusTitleBox.Text = p.Title;
         FocusRefBox.Text = p.ProjectRef;
         FocusStatusBox.Text = p.Status;
         FocusPhaseBox.Text = p.Phase;
         FocusNotesBox.Text = p.Notes;
-        FocusMetaText.Text = $"id={p.ProjectId}";
+        FocusMetaText.Text =
+            $"id={p.ProjectId}  publish={p.PublishState}  ·  Save focus (dock) · Publish status (orange)";
         TaskProjectBox.Text = p.ProjectId;
+        UpdateDockEnabled();
     }
 
     void SavePortfolioProject()
@@ -244,26 +294,26 @@ public sealed partial class MainWindow : Window
         TrayText.Text = $"Saved project {id}";
     }
 
-    void SaveFocusProject()
+    bool SaveFocusProject(bool quiet = false)
     {
-        var id = _focusProjectId ?? _selectedProjectId;
+        var id = ResolveFocusProjectId();
         if (id is null)
         {
-            TrayText.Text = "Select a project in Portfolio first.";
-            return;
+            if (!quiet) TrayText.Text = "No project in focus — open one from Portfolio.";
+            return false;
         }
         var existing = _projects.Get(id);
         if (existing is null)
         {
-            TrayText.Text = "Project not found.";
-            return;
+            if (!quiet) TrayText.Text = "Project not found.";
+            return false;
         }
         var title = FocusTitleBox.Text?.Trim() ?? "";
         var projectRef = FocusRefBox.Text?.Trim() ?? "";
         if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(projectRef))
         {
-            TrayText.Text = "Title and ref required.";
-            return;
+            if (!quiet) TrayText.Text = "Title and ref required.";
+            return false;
         }
         _projects.Upsert(
             id,
@@ -274,15 +324,26 @@ public sealed partial class MainWindow : Window
             FocusNotesBox.Text ?? "",
             existing.PublishState);
         LoadFocusForm();
-        TrayText.Text = $"Saved focus {id}";
+        if (!quiet) TrayText.Text = $"Saved focus · {projectRef} ({existing.PublishState})";
+        return true;
     }
 
     async Task PublishProjectStatusAsync()
     {
-        var id = _focusProjectId ?? _selectedProjectId;
+        // From Focus, persist brief edits before enqueue so hub gets current fields.
+        if (_module == ShellModule.Focus)
+        {
+            if (!SaveFocusProject(quiet: true))
+            {
+                TrayText.Text = "Save focus first — no project or title/ref missing.";
+                return;
+            }
+        }
+
+        var id = ResolveFocusProjectId();
         if (id is null)
         {
-            TrayText.Text = "No project to publish.";
+            TrayText.Text = "No project to publish — select one in Portfolio.";
             return;
         }
         var p = _projects.Get(id);
@@ -306,15 +367,17 @@ public sealed partial class MainWindow : Window
             var result = await _bridge.FlushAsync();
             if (result.SkippedReason is not null)
             {
-                TrayText.Text = $"Queued projectStatus; flush skipped={result.SkippedReason}";
-                ShowModule(ShellModule.Practice);
-                RefreshStatus($"Flush skipped={result.SkippedReason}");
+                TrayText.Text =
+                    $"Queued projectStatus for {p.ProjectRef}; flush skipped={result.SkippedReason} — activate on Practice if needed.";
+                LogText.Text = $"Flush skipped={result.SkippedReason}";
             }
             else
             {
                 _projects.Upsert(p.ProjectId, p.ProjectRef, p.Title, p.Status, p.Phase, p.Notes, "PUBLISHED");
-                TrayText.Text = $"Published projectStatus · metaSent={result.MetaSent}";
+                TrayText.Text = $"Published status · {p.ProjectRef} · metaSent={result.MetaSent}";
+                LogText.Text = $"projectStatus OK · {p.ProjectId}";
             }
+            // Stay on current module (do not yank to Practice).
             if (_module == ShellModule.Portfolio) ReloadProjects();
             if (_module == ShellModule.Focus) LoadFocusForm();
         }
@@ -329,12 +392,13 @@ public sealed partial class MainWindow : Window
         var rows = _projects.List();
         if (rows.Count == 0)
         {
-            TrayText.Text = "No projects yet.";
+            TrayText.Text = "No projects yet — save one or Import from Connect.";
             return;
         }
         _focusProjectId = _selectedProjectId ?? rows[0].ProjectId;
         _selectedProjectId = _focusProjectId;
         ShowModule(ShellModule.Focus);
+        TrayText.Text = $"Focus · {_focusProjectId}";
     }
 
     void ImportCatalog_Click(object sender, RoutedEventArgs e)
@@ -342,15 +406,25 @@ public sealed partial class MainWindow : Window
         var catalog = ConnectCatalog.List();
         if (catalog.Count == 0)
         {
-            TrayText.Text = "Connect catalog empty — %LocalAppData%\\AORMS-Connect\\catalog.json";
+            var note =
+                "Connect catalog empty — open AORMS Connect and sync projects, then retry. " +
+                @"Expected: %LocalAppData%\AORMS-Connect\catalog.json";
+            CatalogImportNote.Text = note;
+            TrayText.Text = "Connect catalog empty.";
+            LogText.Text = note;
             return;
         }
         var n = 0;
+        var skipped = 0;
         foreach (var c in catalog)
         {
             if (string.IsNullOrWhiteSpace(c.Id)) continue;
             var existing = _projects.Get(c.Id);
-            if (existing is not null) continue;
+            if (existing is not null)
+            {
+                skipped++;
+                continue;
+            }
             _projects.Upsert(
                 c.Id,
                 string.IsNullOrWhiteSpace(c.Ref) ? c.Id[..Math.Min(8, c.Id.Length)] : c.Ref,
@@ -361,8 +435,28 @@ public sealed partial class MainWindow : Window
                 "LOCAL");
             n++;
         }
+        if (_selectedProjectId is null)
+        {
+            var first = _projects.List().FirstOrDefault();
+            if (first is not null) _selectedProjectId = first.ProjectId;
+        }
         ReloadProjects();
-        TrayText.Text = $"Imported {n} Connect project(s).";
+        var status =
+            n == 0
+                ? $"Import complete — 0 new ({skipped} already in firm.db, {catalog.Count} in Connect catalog)."
+                : $"Imported {n} from Connect ({skipped} skipped as duplicates). Open selected in Focus when ready.";
+        CatalogImportNote.Text = status;
+        TrayText.Text = n == 0 ? "No new Connect projects." : $"Imported {n} Connect project(s).";
+        LogText.Text = status;
+        if (_module != ShellModule.Portfolio)
+            ShowModule(ShellModule.Portfolio);
+        // S2c polish: after first successful import with empty Focus, open the selected project.
+        if (n > 0 && _focusProjectId is null && _selectedProjectId is not null)
+        {
+            _focusProjectId = _selectedProjectId;
+            ShowModule(ShellModule.Focus);
+            TrayText.Text = $"Imported {n} · Focus · {_focusProjectId}";
+        }
     }
 
     void SaveTaskLocal()
@@ -429,7 +523,8 @@ public sealed partial class MainWindow : Window
                 ProjectPhaseBox.Text = "";
                 break;
             case ShellModule.Focus:
-                FocusNotesBox.Text = "";
+                if (FocusBriefPanel.Visibility == Visibility.Visible)
+                    FocusNotesBox.Text = "";
                 break;
             case ShellModule.Tasks:
                 TaskTitleBox.Text = "";

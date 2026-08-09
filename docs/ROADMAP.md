@@ -11,7 +11,7 @@ Open source until SaaS licensing is decided.
 | --- | --- | --- |
 | S0 | Repo scaffold + pin AQC engine commit | **Done** — `vendor/AQC` @ `aorms-bridge-d2` |
 | S1 | SQLite + Aorms.Bridge (shared with AQC spike) | **Done** — firm.db · BridgeHost · Activate/Flush · Connect session import |
-| S2 | Shell fork: project · estimate · BBS via engine | **In progress** — HCW chrome + Tasks; Projects/Portfolio next; engine P/Invoke after |
+| S2 | Shell fork: project · estimate · BBS via engine | **In progress** — S2a–S2c ?; S2d engine P/Invoke next |
 | S3 | Architecture domain modules (fees, drawings, delivery) | Not started |
 | S4 | Local AI (ESTI) · publish path smoke to hub portal | Not started (meta flush smoke exists) |
 | S5 | Signed installer · downloads CTA on studio.aorms.in | Not started (MSIX = D6) |
@@ -22,7 +22,7 @@ Open source until SaaS licensing is decided.
 | --- | --- | --- |
 | S2a | HCW geography (Ribbon · Stage · ActionDock) | Done |
 | S2b | Tasks local + publish to hub ops | Done |
-| S2c | Portfolio: local projects CRUD · Focus selected · `projectStatus` meta | **Now** |
+| S2c | Portfolio: local projects CRUD · Focus selected · `projectStatus` meta | **Done** — Focus empty-state · Connect import note · dock ?5 / one orange Publish |
 | S2d | Wire estimate / BBS launch via `bbs_engine` (P/Invoke; no C# reimplementation) | Next |
 | S2e | Practice hub panel polish · suite handoff to AQC Estimation/BBS/PM | Next |
 
