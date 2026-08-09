@@ -113,4 +113,10 @@ public sealed partial class MainWindow : Window
             ? "(no local tasks)"
             : string.Join("\n", rows.Select(r => $"{r.TaskId}  {r.Status}/{r.PublishState}  {r.Title}"));
     }
+
+    void ClearForm_Click(object sender, RoutedEventArgs e)
+    {
+        TaskTitleBox.Text = "";
+        RefreshStatus("Form cleared.");
+    }
 }

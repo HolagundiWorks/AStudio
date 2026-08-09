@@ -4,64 +4,124 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="AStudio">
 
-    <ScrollViewer>
-        <Grid Padding="24" RowSpacing="16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <!--
+      HCW geography scaffold (DESKTOP-WEB-PARITY):
+      Ribbon · Stage · ActionDock · status tray.
+      Fog Gray canvas · 8px · Radiant Orange accent (bridge smoke content stays in Stage).
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="32"/>
+        </Grid.RowDefinitions>
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="AStudio" FontSize="28" FontWeight="SemiBold"/>
-                <TextBlock Text="Practice manager — Tasks · Office · HR (suite)"
-                           Opacity="0.7"/>
-            </StackPanel>
-
-            <Border Grid.Row="1" Padding="16" CornerRadius="8"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Hub bridge" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="HubStatusText" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/>
+        <!-- RIBBON — Where am I in the practice? -->
+        <Border Grid.Row="0" Background="#ECEEF2" Padding="16,0" CornerRadius="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="AStudio" FontSize="18" FontWeight="SemiBold" Foreground="#141517"/>
+                    <TextBlock Text="Accelerated Studio" Opacity="0.65" VerticalAlignment="Center" Foreground="#141517"/>
                 </StackPanel>
-            </Border>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Content="Focus" Style="{StaticResource SubtleButtonStyle}" IsEnabled="False"/>
+                    <Button Content="Portfolio" Style="{StaticResource SubtleButtonStyle}" IsEnabled="False"/>
+                    <Button Content="Practice" Style="{StaticResource SubtleButtonStyle}" IsEnabled="False"/>
+                    <Button Content="Tasks" Style="{StaticResource AccentButtonStyle}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="Local AI · desktop" Opacity="0.55"
+                           VerticalAlignment="Center" FontSize="12"/>
+            </Grid>
+        </Border>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
-                <TextBox x:Name="LicenseKeyBox" Width="280" PlaceholderText="License key (HLP-…)"
-                         Header="Activate"/>
-                <Button Content="Activate" Click="Activate_Click" VerticalAlignment="Bottom"/>
-                <Button Content="Flush meta" Click="Flush_Click" VerticalAlignment="Bottom"/>
-                <Button Content="Refresh" Click="Refresh_Click" VerticalAlignment="Bottom"/>
-            </StackPanel>
+        <!-- STAGE — What am I working on? -->
+        <ScrollViewer Grid.Row="1" Background="#F2F4F7" Padding="24">
+            <Grid MaxWidth="960" HorizontalAlignment="Left" RowSpacing="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <Border Grid.Row="3" Padding="16" CornerRadius="8"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Tasks" FontWeight="SemiBold"/>
-                    <TextBlock Text="Local firm.db → publish to Mongo ops (/api/ops/tasks)" Opacity="0.7" FontSize="12"/>
-                    <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
-                    <TextBox x:Name="TaskProjectBox" Header="Project id (UUID)"
-                             Text="00000000-0000-0000-0000-000000000001"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Save local" Click="SaveTaskLocal_Click"/>
-                        <Button Content="Publish to hub" Click="PublishTask_Click"/>
-                        <Button Content="Reload list" Click="ReloadTasks_Click"/>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Tasks" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                    <TextBlock Text="Local firm.db → publish to Mongo ops. Office · HR modules come next."
+                               Opacity="0.7" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Border Grid.Row="1" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                        BorderBrush="#D0D4DC" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Hub bridge" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="HubStatusText" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap"
+                                   FontFamily="Consolas" FontSize="12"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBox x:Name="LicenseKeyBox" Width="280"
+                                     PlaceholderText="License key (HLP-…)" Header="Activate"/>
+                            <Button Content="Activate" Click="Activate_Click" VerticalAlignment="Bottom"/>
+                            <Button Content="Flush meta" Click="Flush_Click" VerticalAlignment="Bottom"/>
+                            <Button Content="Refresh" Click="Refresh_Click" VerticalAlignment="Bottom"/>
+                        </StackPanel>
                     </StackPanel>
-                    <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
+                </Border>
 
-            <TextBlock Grid.Row="5"
-                       Text="Office · HR · Payroll modules come next. Technical calc lives in AQC Estimation / BBS / PM."
-                       Opacity="0.6" TextWrapping="Wrap"/>
-        </Grid>
-    </ScrollViewer>
+                <Border Grid.Row="2" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                        BorderBrush="#D0D4DC" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Task board" FontWeight="SemiBold"/>
+                        <TextBlock Text="Create and commit via the ActionDock below (HCW zones)."
+                                   Opacity="0.7" FontSize="12"/>
+                        <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
+                        <TextBox x:Name="TaskProjectBox" Header="Project id (UUID)"
+                                 Text="00000000-0000-0000-0000-000000000001"/>
+                        <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Row="3"
+                           Text="Technical calc lives in AQC Estimation / BBS / PM. Launch from AORMS Connect."
+                           Opacity="0.55" TextWrapping="Wrap" FontSize="12"/>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ACTION DOCK — destroy LEFT · create CENTRE · commit RIGHT -->
+        <Border Grid.Row="2" Background="#ECEEF2" Padding="16,8" BorderBrush="#D0D4DC" BorderThickness="0,1,0,0">
+            <Grid MaxWidth="960" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="Clear form" Click="ClearForm_Click" MinHeight="44"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="Save local" Click="SaveTaskLocal_Click"
+                            Style="{StaticResource AccentButtonStyle}" MinHeight="44" MinWidth="120"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Reload" Click="ReloadTasks_Click" MinHeight="44"/>
+                    <Button Content="Publish to hub" Click="PublishTask_Click"
+                            Background="#FF4F18" Foreground="White" MinHeight="44" MinWidth="140"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- STATUS TRAY -->
+        <Border Grid.Row="3" Background="#ECEEF2" Padding="16,0" BorderBrush="#D0D4DC" BorderThickness="0,1,0,0">
+            <TextBlock Text="AStudio · suite practice manager · sync tray"
+                       VerticalAlignment="Center" FontSize="11" Opacity="0.55"/>
+        </Border>
+    </Grid>
 </Window>

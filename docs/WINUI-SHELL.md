@@ -1,6 +1,23 @@
-# AStudio WinUI shell (D5)
+# AStudio WinUI shell (D5 + HCW geography)
 
-**Status:** Unpackaged WinUI 3 shell builds on VS 2022 Community · **Updated:** 2026-08-07
+**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-09  
+**Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md)
+
+## Chrome (HCW scaffold)
+
+```text
+┌─ Ribbon (Focus · Portfolio · Practice · Tasks) ─────────────┐
+├─ Stage (Fog Gray) — bridge Activate · Tasks ────────────────┤
+├─ ActionDock — Clear · Save local · Reload · Publish ────────┤
+└─ Status tray ───────────────────────────────────────────────┘
+```
+
+- Canvas `#F2F4F7` · soft chrome `#ECEEF2` · ink `#141517` · accent `#FF4F18` · **8px** radius  
+- Dock zones: destroy LEFT · create CENTRE · commit RIGHT  
+- Local AI badge on ribbon — ESTI does **not** run on the hub  
+
+Domain modules (Office · HR · full IA) still land next; this shell replaces the
+bridge-smoke single scroll with one geography.
 
 ## Build
 
@@ -29,4 +46,4 @@ Activate with a live key → Enqueue smoke meta → Flush.
 - Bridge: `Aorms.Bridge` via ProjectReference
 - firm.db: `%LocalAppData%\AStudio\firm.db`
 
-MSIX signing / Store package = D6. Domain UI (fork of AQC BBSApp) = next.
+MSIX signing / Store package = D6. Full domain UI (fork of AQC BBSApp) = next.
