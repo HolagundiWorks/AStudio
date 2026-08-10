@@ -41,7 +41,7 @@ AI transcripts (incl. Practice Ask ESTI / Ollama) · measurement scratch · nest
 | --- | --- | --- |
 | Brief | `projectStatus` | Portfolio / Focus |
 | Fees | `invoiceStatus` | `amountPaise` in patch |
-| Drawings | `drawingRegister` | Meta only; artifact ingest later |
+| Drawings | `drawingRegister` meta · `drawing` artifact | S3e: JSON ingest + sha256; `fileKeys` empty until binary wave |
 | Delivery | `phaseProgress` | Snag / instruction / progress kinds |
 
 Bump this pin when esti HUB-API / bridge version bumps.

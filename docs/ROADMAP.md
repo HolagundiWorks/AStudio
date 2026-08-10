@@ -12,7 +12,7 @@ Open source until SaaS licensing is decided.
 | S0 | Repo scaffold + pin AQC engine commit | **Done** — `vendor/AQC` @ `aorms-bridge-d2` |
 | S1 | SQLite + Aorms.Bridge (shared with AQC spike) | **Done** — firm.db · BridgeHost · Activate/Flush · Connect session import |
 | S2 | Shell fork: project · estimate · BBS via engine | **Done** — S2a–S2e |
-| S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — Focus tabs · local stores · allow-listed meta |
+| S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — S3a–S3e (artifact ingest envelope) |
 | S4 | Local AI (ESTI) · publish path smoke to hub portal | **Done** — Practice Ask ESTI · Ollama probe/chat · Flush stays on tray |
 | S5 | Signed installer · downloads CTA on studio.aorms.in | Not started (MSIX = D6) |
 
@@ -21,7 +21,7 @@ Open source until SaaS licensing is decided.
 | Slice | Intent | Status |
 | --- | --- | --- |
 | S3a–S3d | Focus Brief · Fees · Drawings · Delivery | Done |
-| S3e | Drawing artifact ingest / PDF annotate / deep COA | Later |
+| S3e | Drawing artifact ingest (sha256 · Bridge `/api/sync/ingest`) | **Done** · binary upload later |
 
 ## S4 checklist
 

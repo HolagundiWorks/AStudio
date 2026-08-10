@@ -5,7 +5,10 @@ using Microsoft.Data.Sqlite;
 
 namespace AStudio.App.Services;
 
-/// <summary>Drawing register rows in firm.db (S3). READY → publish drawingRegister meta.</summary>
+/// <summary>
+/// Drawing register in firm.db (S3). READY → drawingRegister meta.
+/// S3e: optional local_path + content_hash for artifact outbox ingest.
+/// </summary>
 public sealed class LocalDrawingsStore : IDisposable
 {
     readonly SqliteConnection _con;
@@ -26,22 +29,40 @@ public sealed class LocalDrawingsStore : IDisposable
 
     void EnsureSchema()
     {
-        using var cmd = _con.CreateCommand();
-        cmd.CommandText = """
-            CREATE TABLE IF NOT EXISTS local_drawings(
-              drawing_id TEXT PRIMARY KEY,
-              project_id TEXT NOT NULL,
-              number TEXT NOT NULL,
-              title TEXT NOT NULL,
-              rev TEXT NOT NULL DEFAULT 'A',
-              status TEXT NOT NULL DEFAULT 'WIP',
-              notes TEXT NOT NULL DEFAULT '',
-              publish_state TEXT NOT NULL DEFAULT 'LOCAL',
-              updated_at TEXT NOT NULL
-            );
-            CREATE INDEX IF NOT EXISTS idx_local_drawings_project ON local_drawings(project_id);
-            """;
-        cmd.ExecuteNonQuery();
+        using (var cmd = _con.CreateCommand())
+        {
+            cmd.CommandText = """
+                CREATE TABLE IF NOT EXISTS local_drawings(
+                  drawing_id TEXT PRIMARY KEY,
+                  project_id TEXT NOT NULL,
+                  number TEXT NOT NULL,
+                  title TEXT NOT NULL,
+                  rev TEXT NOT NULL DEFAULT 'A',
+                  status TEXT NOT NULL DEFAULT 'WIP',
+                  notes TEXT NOT NULL DEFAULT '',
+                  publish_state TEXT NOT NULL DEFAULT 'LOCAL',
+                  updated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_local_drawings_project ON local_drawings(project_id);
+                """;
+            cmd.ExecuteNonQuery();
+        }
+        TryAddColumn("local_path", "TEXT NOT NULL DEFAULT ''");
+        TryAddColumn("content_hash", "TEXT NOT NULL DEFAULT ''");
+    }
+
+    void TryAddColumn(string name, string decl)
+    {
+        try
+        {
+            using var cmd = _con.CreateCommand();
+            cmd.CommandText = $"ALTER TABLE local_drawings ADD COLUMN {name} {decl}";
+            cmd.ExecuteNonQuery();
+        }
+        catch (SqliteException)
+        {
+            // column already exists
+        }
     }
 
     public void Upsert(
@@ -52,13 +73,16 @@ public sealed class LocalDrawingsStore : IDisposable
         string rev,
         string status,
         string notes,
-        string publishState)
+        string publishState,
+        string? localPath = null,
+        string? contentHash = null)
     {
         using var cmd = _con.CreateCommand();
         cmd.CommandText = """
             INSERT INTO local_drawings(
-              drawing_id, project_id, number, title, rev, status, notes, publish_state, updated_at)
-            VALUES($id,$p,$num,$t,$rev,$s,$n,$ps,$u)
+              drawing_id, project_id, number, title, rev, status, notes, publish_state,
+              local_path, content_hash, updated_at)
+            VALUES($id,$p,$num,$t,$rev,$s,$n,$ps,$path,$hash,$u)
             ON CONFLICT(drawing_id) DO UPDATE SET
               project_id=excluded.project_id,
               number=excluded.number,
@@ -67,6 +91,8 @@ public sealed class LocalDrawingsStore : IDisposable
               status=excluded.status,
               notes=excluded.notes,
               publish_state=excluded.publish_state,
+              local_path=CASE WHEN excluded.local_path='' THEN local_drawings.local_path ELSE excluded.local_path END,
+              content_hash=CASE WHEN excluded.content_hash='' THEN local_drawings.content_hash ELSE excluded.content_hash END,
               updated_at=excluded.updated_at
             """;
         cmd.Parameters.AddWithValue("$id", drawingId);
@@ -77,6 +103,8 @@ public sealed class LocalDrawingsStore : IDisposable
         cmd.Parameters.AddWithValue("$s", status);
         cmd.Parameters.AddWithValue("$n", notes);
         cmd.Parameters.AddWithValue("$ps", publishState);
+        cmd.Parameters.AddWithValue("$path", localPath ?? "");
+        cmd.Parameters.AddWithValue("$hash", contentHash ?? "");
         cmd.Parameters.AddWithValue("$u", DateTime.UtcNow.ToString("O"));
         cmd.ExecuteNonQuery();
     }
@@ -85,7 +113,8 @@ public sealed class LocalDrawingsStore : IDisposable
     {
         using var cmd = _con.CreateCommand();
         cmd.CommandText = """
-            SELECT drawing_id, project_id, number, title, rev, status, notes, publish_state
+            SELECT drawing_id, project_id, number, title, rev, status, notes, publish_state,
+                   local_path, content_hash
             FROM local_drawings WHERE drawing_id=$id
             """;
         cmd.Parameters.AddWithValue("$id", drawingId);
@@ -98,7 +127,8 @@ public sealed class LocalDrawingsStore : IDisposable
     {
         using var cmd = _con.CreateCommand();
         cmd.CommandText = """
-            SELECT drawing_id, project_id, number, title, rev, status, notes, publish_state
+            SELECT drawing_id, project_id, number, title, rev, status, notes, publish_state,
+                   local_path, content_hash
             FROM local_drawings WHERE project_id=$p ORDER BY updated_at DESC LIMIT 100
             """;
         cmd.Parameters.AddWithValue("$p", projectId);
@@ -116,7 +146,9 @@ public sealed class LocalDrawingsStore : IDisposable
         r.GetString(4),
         r.GetString(5),
         r.GetString(6),
-        r.GetString(7));
+        r.GetString(7),
+        r.IsDBNull(8) ? "" : r.GetString(8),
+        r.IsDBNull(9) ? "" : r.GetString(9));
 
     public void Dispose() => _con.Dispose();
 }
@@ -129,4 +161,6 @@ public sealed record LocalDrawing(
     string Rev,
     string Status,
     string Notes,
-    string PublishState);
+    string PublishState,
+    string LocalPath,
+    string ContentHash);

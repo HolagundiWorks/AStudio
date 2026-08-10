@@ -157,19 +157,25 @@
                         <Border x:Name="FocusDrawingsPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
                                 BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Drawings · register" FontWeight="SemiBold"/>
-                                <TextBlock Text="WIP → READY → ISSUED. Publish queues drawingRegister meta (artifacts later)."
+                                <TextBlock Text="Drawings · register + artifact" FontWeight="SemiBold"/>
+                                <TextBlock Text="WIP → READY → ISSUED. Publish = drawingRegister meta. Queue artifact = ingest envelope (sha256; binary upload later)."
                                            Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
                                 <TextBox x:Name="DrawingNumberBox" Header="Number" PlaceholderText="A-101"/>
                                 <TextBox x:Name="DrawingTitleBox" Header="Title" PlaceholderText="Ground floor plan"/>
                                 <TextBox x:Name="DrawingRevBox" Header="Rev" PlaceholderText="A"/>
                                 <TextBox x:Name="DrawingStatusBox" Header="Status" PlaceholderText="WIP / READY / ISSUED"/>
+                                <TextBox x:Name="DrawingPathBox" Header="Local file path (optional)"
+                                         PlaceholderText="D:\drawings\A-101.pdf"/>
                                 <TextBox x:Name="DrawingNotesBox" Header="Notes" AcceptsReturn="True"
                                          TextWrapping="Wrap" MinHeight="48"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Content="Queue artifact ingest" Click="QueueDrawingArtifact_Click"
+                                            MinHeight="44"/>
+                                </StackPanel>
                                 <TextBlock x:Name="DrawingListText" FontFamily="Consolas" FontSize="12"
                                            TextWrapping="Wrap"/>
-                                <TextBlock Text="Dock: Save drawing · Publish register."
-                                           Opacity="0.55" FontSize="12"/>
+                                <TextBlock Text="Dock: Save drawing · Publish register. Artifact uses Bridge POST /api/sync/ingest."
+                                           Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 

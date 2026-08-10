@@ -31,9 +31,10 @@
 - Transcripts **never** synced. Env: `ESTI_OLLAMA_URL` · `ESTI_OLLAMA_MODEL`.  
 - Ribbon badge shows `Local AI · {model}` when reachable.
 
-### S3 kept
+### S3 / S3e
 
-Focus domain tabs · paise fees · drawing register · delivery items.
+Focus domain tabs · paise fees · delivery items.  
+Drawings: register meta + **Queue artifact ingest** (`drawing` artifact · sha256 · Bridge flush; binary upload later).
 
 ## Build / run
 

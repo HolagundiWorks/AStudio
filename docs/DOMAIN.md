@@ -10,7 +10,7 @@ Reference IA from esti [NAVIGATION.md](https://github.com/HolagundiWorks/esti/bl
 | Studio Intelligence | Office health · KPIs · attention (local calc + ESTI) | Practice **Ask ESTI** (Ollama); deep KPIs later |
 | Projects / brief / R&O | Practice project record | Portfolio + Focus **Brief** |
 | Fees · proposals · invoices | India COA/GST money (paise) | Focus **Fees** · `local_fees` · `invoiceStatus` |
-| Drawings · transmittals | Issue READY → publish artifact | Focus **Drawings** · `local_drawings` · `drawingRegister` meta; artifact ingest later |
+| Drawings · transmittals | Issue READY → publish artifact | Focus **Drawings** · `drawingRegister` + S3e `drawing` artifact (sha256) |
 | Delivery | Snags · instructions · progress · BBS via engine | Focus **Delivery** · `local_delivery` · `phaseProgress`; BBS = engine smoke / AQC |
 | Estimation | Rate books + BOQ via C++ engine | S2d smoke + S2e AQC handoff |
 | Team / tasks / ASPRF | Local work; status meta to hub | Tasks module |

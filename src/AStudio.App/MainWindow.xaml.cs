@@ -482,7 +482,8 @@ public sealed partial class MainWindow : Window
         DrawingListText.Text = string.Join("\n", rows.Select(r =>
         {
             var mark = r.DrawingId == _selectedDrawingId ? ">" : " ";
-            return $"{mark} {r.Number}-Rev{r.Rev}  {r.Status}/{r.PublishState}  {r.Title}  [{r.DrawingId}]";
+            var hash = string.IsNullOrEmpty(r.ContentHash) ? "-" : r.ContentHash[..Math.Min(8, r.ContentHash.Length)];
+            return $"{mark} {r.Number}-Rev{r.Rev}  {r.Status}/{r.PublishState}  hash={hash}  {r.Title}  [{r.DrawingId}]";
         }));
         _selectedDrawingId ??= rows[0].DrawingId;
     }
@@ -745,15 +746,20 @@ public sealed partial class MainWindow : Window
         var status = string.IsNullOrWhiteSpace(DrawingStatusBox.Text)
             ? "WIP"
             : DrawingStatusBox.Text.Trim().ToUpperInvariant();
-        _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL");
+        var path = DrawingPathBox.Text?.Trim() ?? "";
+        var hash = ContentHash.Sha256File(path) ?? "";
+        _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL", path, hash);
         _selectedDrawingId = id;
         DrawingNumberBox.Text = "";
         DrawingTitleBox.Text = "";
         DrawingRevBox.Text = "";
         DrawingStatusBox.Text = "";
+        DrawingPathBox.Text = "";
         DrawingNotesBox.Text = "";
         ReloadDrawings();
-        TrayText.Text = $"Saved drawing {number}-Rev{rev}";
+        TrayText.Text = string.IsNullOrEmpty(hash)
+            ? $"Saved drawing {number}-Rev{rev}"
+            : $"Saved drawing {number}-Rev{rev} · sha256={hash[..8]}…";
     }
 
     async Task PublishDrawingAsync()
@@ -765,34 +771,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        LocalDrawing? row = null;
-        var number = DrawingNumberBox.Text?.Trim() ?? "";
-        var title = DrawingTitleBox.Text?.Trim() ?? "";
-        if (!string.IsNullOrEmpty(number) && !string.IsNullOrEmpty(title))
-        {
-            var id = Guid.NewGuid().ToString("N")[..12];
-            var rev = string.IsNullOrWhiteSpace(DrawingRevBox.Text) ? "A" : DrawingRevBox.Text.Trim();
-            var status = string.IsNullOrWhiteSpace(DrawingStatusBox.Text)
-                ? "READY"
-                : DrawingStatusBox.Text.Trim().ToUpperInvariant();
-            _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL");
-            _selectedDrawingId = id;
-            DrawingNumberBox.Text = "";
-            DrawingTitleBox.Text = "";
-            DrawingRevBox.Text = "";
-            DrawingStatusBox.Text = "";
-            DrawingNotesBox.Text = "";
-            row = _drawings.Get(id);
-        }
-        else if (_selectedDrawingId is not null)
-        {
-            row = _drawings.Get(_selectedDrawingId);
-        }
-        else
-        {
-            row = _drawings.ListByProject(projectId).FirstOrDefault();
-        }
-
+        var row = ResolveDrawingRow(projectId, preferReady: true);
         if (row is null)
         {
             TrayText.Text = "Save a drawing first (number + title).";
@@ -809,9 +788,11 @@ public sealed partial class MainWindow : Window
                 ["title"] = row.Title,
                 ["rev"] = row.Rev,
                 ["status"] = row.Status,
+                ["contentHash"] = row.ContentHash,
                 ["updatedAt"] = DateTime.UtcNow.ToString("O"),
             });
-            _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "QUEUED");
+            _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "QUEUED",
+                row.LocalPath, row.ContentHash);
             var result = await _bridge.FlushAsync();
             if (result.SkippedReason is not null)
             {
@@ -821,7 +802,8 @@ public sealed partial class MainWindow : Window
             }
             else
             {
-                _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "PUBLISHED");
+                _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "PUBLISHED",
+                    row.LocalPath, row.ContentHash);
                 TrayText.Text = $"Published register · {row.Number}-Rev{row.Rev} · metaSent={result.MetaSent}";
                 LogText.Text = $"drawingRegister OK · {row.DrawingId}";
             }
@@ -831,6 +813,128 @@ public sealed partial class MainWindow : Window
         {
             TrayText.Text = $"Publish failed: {ex.Message}";
         }
+    }
+
+    /// <summary>S3e — enqueue allow-listed drawing artifact (JSON envelope + sha256; binary upload later).</summary>
+    async void QueueDrawingArtifact_Click(object sender, RoutedEventArgs e)
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+
+        var row = ResolveDrawingRow(projectId, preferReady: false);
+        if (row is null)
+        {
+            TrayText.Text = "Save a drawing first (number + title).";
+            return;
+        }
+
+        var path = DrawingPathBox.Text?.Trim();
+        if (string.IsNullOrEmpty(path)) path = row.LocalPath;
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            TrayText.Text = "Set a valid local file path, Save drawing, then Queue artifact.";
+            return;
+        }
+
+        var hash = ContentHash.Sha256File(path);
+        if (string.IsNullOrEmpty(hash))
+        {
+            TrayText.Text = "Could not hash file.";
+            return;
+        }
+
+        var storageKey = $"drawings/{row.ProjectId}/{row.DrawingId}/{row.Number}-rev{row.Rev}";
+        try
+        {
+            _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes,
+                row.PublishState, path, hash);
+            _bridge.EnqueueArtifact(
+                "drawing",
+                row.DrawingId,
+                new Dictionary<string, object?>
+                {
+                    ["drawingId"] = row.DrawingId,
+                    ["projectId"] = row.ProjectId,
+                    ["number"] = row.Number,
+                    ["title"] = row.Title,
+                    ["rev"] = row.Rev,
+                    ["status"] = row.Status,
+                    ["localPath"] = path,
+                    ["storageKey"] = storageKey,
+                    ["contentHash"] = hash,
+                    ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+                },
+                contentHash: hash,
+                storageKey: storageKey);
+            // Also keep register meta in sync for portals.
+            _bridge.EnqueueMeta("drawingRegister", row.DrawingId, new Dictionary<string, object?>
+            {
+                ["drawingId"] = row.DrawingId,
+                ["projectId"] = row.ProjectId,
+                ["number"] = row.Number,
+                ["title"] = row.Title,
+                ["rev"] = row.Rev,
+                ["status"] = row.Status,
+                ["contentHash"] = hash,
+                ["storageKey"] = storageKey,
+                ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+            });
+            _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "QUEUED",
+                path, hash);
+            var result = await _bridge.FlushAsync();
+            if (result.SkippedReason is not null)
+            {
+                TrayText.Text =
+                    $"Queued drawing artifact; flush skipped={result.SkippedReason} — Activate on Practice.";
+                LogText.Text = $"Flush skipped={result.SkippedReason} · sha256={hash[..8]}…";
+            }
+            else
+            {
+                _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "PUBLISHED",
+                    path, hash);
+                TrayText.Text =
+                    $"Artifact ingest · {row.Number}-Rev{row.Rev} · meta={result.MetaSent} art={result.ArtifactsSent}";
+                LogText.Text = $"drawing ingest OK · {storageKey} · sha256={hash[..12]}…";
+            }
+            DrawingPathBox.Text = "";
+            ReloadDrawings();
+        }
+        catch (Exception ex)
+        {
+            TrayText.Text = $"Artifact queue failed: {ex.Message}";
+        }
+    }
+
+    LocalDrawing? ResolveDrawingRow(string projectId, bool preferReady)
+    {
+        var number = DrawingNumberBox.Text?.Trim() ?? "";
+        var title = DrawingTitleBox.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(number) && !string.IsNullOrEmpty(title))
+        {
+            var id = Guid.NewGuid().ToString("N")[..12];
+            var rev = string.IsNullOrWhiteSpace(DrawingRevBox.Text) ? "A" : DrawingRevBox.Text.Trim();
+            var status = string.IsNullOrWhiteSpace(DrawingStatusBox.Text)
+                ? (preferReady ? "READY" : "WIP")
+                : DrawingStatusBox.Text.Trim().ToUpperInvariant();
+            var path = DrawingPathBox.Text?.Trim() ?? "";
+            var hash = ContentHash.Sha256File(path) ?? "";
+            _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL", path, hash);
+            _selectedDrawingId = id;
+            DrawingNumberBox.Text = "";
+            DrawingTitleBox.Text = "";
+            DrawingRevBox.Text = "";
+            DrawingStatusBox.Text = "";
+            DrawingPathBox.Text = "";
+            DrawingNotesBox.Text = "";
+            return _drawings.Get(id);
+        }
+        if (_selectedDrawingId is not null)
+            return _drawings.Get(_selectedDrawingId);
+        return _drawings.ListByProject(projectId).FirstOrDefault();
     }
 
     void SaveDelivery()
@@ -1169,6 +1273,7 @@ public sealed partial class MainWindow : Window
                         DrawingTitleBox.Text = "";
                         DrawingRevBox.Text = "";
                         DrawingStatusBox.Text = "";
+                        DrawingPathBox.Text = "";
                         DrawingNotesBox.Text = "";
                         break;
                     case FocusDomain.Delivery:
