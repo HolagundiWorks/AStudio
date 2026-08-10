@@ -2,3 +2,6 @@
 **/obj/
 .vs/
 *.user
+.tmp-engine-smoke/
+# Local engine build (run build-engine.cmd)
+vendor/AQC/BBSDesktop/build/

@@ -29,7 +29,12 @@ Then in the WinUI `.csproj`:
 
 1. Done: submodule at `aorms-bridge-d2`.  
 2. Done: WinUI shell + activate/Flush.  
-3. Now: S2c Portfolio/Focus — see [ROADMAP.md](ROADMAP.md).  
-4. Next: S2d P/Invoke `bbs_engine`; S4 local AI (ESTI) desktop only.
+3. Done: S2c Portfolio/Focus — see [ROADMAP.md](ROADMAP.md).  
+4. Done: S2d P/Invoke `bbs_engine` (`BbsEngineClient` · Focus engine smoke · `build-engine.cmd`).  
+5. Next: S3 domain modules · S4 local AI (ESTI) desktop only.
+
+```bat
+build-engine.cmd
+```
 
 Open source; SaaS licensing deferred.

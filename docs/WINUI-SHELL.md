@@ -1,6 +1,6 @@
 # AStudio WinUI shell (D5 + HCW geography)
 
-**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-09 · wave **S2c** ✅  
+**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-10 · wave **S2d** ✅  
 **Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md)
 
 ## Chrome (HCW scaffold)
@@ -20,22 +20,26 @@
 | Ribbon | Stage |
 | --- | --- |
 | Portfolio | Local projects CRUD · **Import from Connect** (stage card + dock) · import status note |
-| Focus | Selected project brief · empty-state when none · Save focus · `projectStatus` publish |
+| Focus | Selected project brief · **Engine smoke (column)** · Open AQC Estimation/BBS · `projectStatus` publish |
 | Practice | Hub Activate / Flush |
 | Tasks | Local tasks · ops publish |
 
-### S2c polish (2026-08-09)
+### S2d — in-process engine (2026-08-10)
 
-- **Focus empty state** — clear copy + “Go to Portfolio”; Save focus / Publish status disabled until a project is selected.  
-- **Focus publish** — Save focus runs before Publish status; stays on Focus (no yank to Practice on flush skip).  
-- **Connect import** — prominent “Import from Connect” on Portfolio stage + dock; `CatalogImportNote` reports new vs skipped; **auto-opens Focus** after first successful import when Focus was empty.  
-- **Next:** S2d = estimate/BBS via `bbs_engine` (not started here). Fees · drawings · delivery = S3.
+- `BbsEngineClient` P/Invoke → `bbs_engine.dll` (AQC ABI).  
+- Focus **Engine smoke (column)** runs a sample rectangular column and shows BBS/summary counts.  
+- Build DLL: `build-engine.cmd` (MSVC) → `vendor/AQC/BBSDesktop/build/bbs_engine.dll` (gitignored).  
+- csproj copies the DLL beside `AStudio.exe` when present.  
+- Full BBS sheets / estimate UI remain in AQC (S2e handoff); S3 adds domain depth in AStudio.
+
+### S2c polish (kept)
+
+- Focus empty state · publish saves brief first · Connect import auto-opens Focus when empty.
 
 ## Build
 
-Use **Visual Studio 2022 MSBuild** (not `dotnet build` alone — SDK 10 misses Appx Pri tasks):
-
 ```bat
+build-engine.cmd
 build-winui.cmd
 ```
 
@@ -50,12 +54,10 @@ set ESTI_PRODUCT_API_KEY=hlp_sk_...
 src\AStudio.App\bin\x64\Release\net8.0-windows10.0.19041.0\AStudio.exe
 ```
 
-Activate with a live key → Enqueue smoke meta → Flush.
-
 ## Pin
 
-- Submodule: `vendor/AQC` @ tag `aorms-bridge-d2`
-- Bridge: `Aorms.Bridge` via ProjectReference
+- Submodule: `vendor/AQC`  
+- Bridge: `Aorms.Bridge` via ProjectReference  
 - firm.db: `%LocalAppData%\AStudio\firm.db`
 
-MSIX signing / Store package = D6. Full domain UI (fork of AQC BBSApp) = next.
+MSIX signing / Store package = D6.
