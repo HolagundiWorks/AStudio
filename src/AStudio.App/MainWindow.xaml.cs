@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aorms.Bridge;
 using AStudio.App.Services;
 using Microsoft.UI.Xaml;
@@ -399,6 +400,51 @@ public sealed partial class MainWindow : Window
         _selectedProjectId = _focusProjectId;
         ShowModule(ShellModule.Focus);
         TrayText.Text = $"Focus · {_focusProjectId}";
+    }
+
+    /// <summary>S2e — launch AQC Estimation (technical calc stays out of AStudio process).</summary>
+    void OpenAqcEstimation_Click(object sender, RoutedEventArgs e) =>
+        LaunchSuiteApp("AQC-Estimation", "AQC Estimation", "ESTI_AQC_ESTIMATION_EXE");
+
+    void OpenAqcBbs_Click(object sender, RoutedEventArgs e) =>
+        LaunchSuiteApp("AQC-BBS", "AQC BBS", "ESTI_AQC_BBS_EXE");
+
+    void LaunchSuiteApp(string folderHint, string productLabel, string envOverride)
+    {
+        var sessionPath = ConnectSession.DefaultPath();
+        var candidates = new List<string>();
+        var envPath = Environment.GetEnvironmentVariable(envOverride);
+        if (!string.IsNullOrWhiteSpace(envPath)) candidates.Add(envPath.Trim());
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        candidates.Add(Path.Combine(local, "Programs", folderHint, $"{folderHint}.exe"));
+        candidates.Add(Path.Combine(pf, folderHint, $"{folderHint}.exe"));
+        // Dev smoke: sibling BBSApp / Estimation product shells under vendor pin.
+        var repoGuess = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "vendor", "AQC", "BBSDesktop"));
+        candidates.Add(Path.Combine(repoGuess, "AQC.Estimation", "bin", "Release", "net8.0", "AQC.Estimation.exe"));
+        candidates.Add(Path.Combine(repoGuess, "BBSApp", "bin", "x64", "Release", "net8.0-windows10.0.19041.0", "BBSApp.exe"));
+
+        foreach (var path in candidates.Where(File.Exists))
+        {
+            var args = File.Exists(sessionPath)
+                ? $"{ConnectSession.FlagConnectSession} \"{sessionPath}\""
+                : "";
+            Process.Start(new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                Arguments = args,
+            });
+            var focus = ResolveFocusProjectId();
+            TrayText.Text = focus is null
+                ? $"Launched {productLabel}"
+                : $"Launched {productLabel} · focus project {focus}";
+            LogText.Text = path;
+            return;
+        }
+
+        TrayText.Text =
+            $"{productLabel} not installed. Set {envOverride}, install via Connect Downloads, or build AQC.";
+        LogText.Text = $"Tried: {string.Join(" | ", candidates.Take(4))}…";
     }
 
     void ImportCatalog_Click(object sender, RoutedEventArgs e)
