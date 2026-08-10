@@ -29,8 +29,10 @@ public sealed partial class MainWindow : Window
     readonly LocalFeesStore _fees;
     readonly LocalDrawingsStore _drawings;
     readonly LocalDeliveryStore _delivery;
+    readonly EstiOllamaClient _esti;
     ShellModule _module = ShellModule.Portfolio;
     FocusDomain _focusDomain = FocusDomain.Brief;
+    bool _estiBusy;
     string? _focusProjectId;
     string? _selectedProjectId;
     string? _selectedFeeId;
@@ -49,8 +51,10 @@ public sealed partial class MainWindow : Window
             _fees = new LocalFeesStore(dbPath);
             _drawings = new LocalDrawingsStore(dbPath);
             _delivery = new LocalDeliveryStore(dbPath);
+            _esti = new EstiOllamaClient();
             ShowModule(ShellModule.Portfolio);
             RefreshStatus("Ready.");
+            _ = ProbeOllamaQuietAsync();
         }
         catch (Exception ex)
         {
@@ -105,6 +109,7 @@ public sealed partial class MainWindow : Window
                 break;
             case ShellModule.Practice:
                 RefreshStatus();
+                _ = ProbeOllamaQuietAsync();
                 break;
             case ShellModule.Tasks:
                 if (!string.IsNullOrEmpty(_focusProjectId) &&
@@ -141,6 +146,7 @@ public sealed partial class MainWindow : Window
         DockCreateBtn.Content = _module switch
         {
             ShellModule.Portfolio => "Save project",
+            ShellModule.Practice => "Probe Ollama",
             ShellModule.Tasks => "Save local",
             _ => "Save local",
         };
@@ -209,6 +215,82 @@ public sealed partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(note))
             LogText.Text = note;
     }
+
+    async Task ProbeOllamaQuietAsync()
+    {
+        var probe = await _esti.ProbeAsync();
+        EstiStatusText.Text = $"{probe.Note} · {_esti.BaseUrl}";
+        LocalAiBadge.Text = probe.Reachable
+            ? $"Local AI · {_esti.Model}"
+            : "Local AI · offline";
+        LocalAiBadge.Opacity = probe.Reachable ? 0.85 : 0.45;
+    }
+
+    async void ProbeOllama_Click(object sender, RoutedEventArgs e)
+    {
+        if (_estiBusy) return;
+        _estiBusy = true;
+        try
+        {
+            EstiStatusText.Text = "Probing Ollama…";
+            var probe = await _esti.ProbeAsync();
+            EstiStatusText.Text = $"{probe.Note} · {_esti.BaseUrl}";
+            LocalAiBadge.Text = probe.Reachable
+                ? $"Local AI · {_esti.Model}"
+                : "Local AI · offline";
+            LocalAiBadge.Opacity = probe.Reachable ? 0.85 : 0.45;
+            TrayText.Text = probe.Reachable ? "Ollama reachable" : "Ollama offline";
+            LogText.Text = probe.Note;
+        }
+        finally
+        {
+            _estiBusy = false;
+        }
+    }
+
+    async void AskEsti_Click(object sender, RoutedEventArgs e)
+    {
+        if (_estiBusy) return;
+        var q = EstiPromptBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(q))
+        {
+            TrayText.Text = "Enter a question for ESTI.";
+            return;
+        }
+        _estiBusy = true;
+        try
+        {
+            EstiReplyText.Text = "Asking local Ollama…";
+            TrayText.Text = "ESTI thinking…";
+            var result = await _esti.AskAsync(q, BuildEstiContext());
+            EstiReplyText.Text = result.Ok ? result.Reply : result.Note;
+            TrayText.Text = result.Ok ? "ESTI reply ready (local only)" : "ESTI ask failed";
+            LogText.Text = result.Note;
+            // Never enqueue transcripts — SYNC-CONTRACT "Never sync".
+        }
+        finally
+        {
+            _estiBusy = false;
+        }
+    }
+
+    string BuildEstiContext()
+    {
+        var id = ResolveFocusProjectId();
+        if (id is null) return "No project in Focus.";
+        var p = _projects.Get(id);
+        if (p is null) return $"Focus project {id} missing from firm.db.";
+        var feeN = _fees.ListByProject(id).Count;
+        var dwgN = _drawings.ListByProject(id).Count;
+        var delN = _delivery.ListByProject(id).Count;
+        return
+            $"id={p.ProjectId} ref={p.ProjectRef} title={p.Title} status={p.Status} phase={p.Phase}\n" +
+            $"notes={TrimCtx(p.Notes, 200)}\n" +
+            $"counts: fees={feeN} drawings={dwgN} delivery={delN}";
+    }
+
+    static string TrimCtx(string s, int max) =>
+        string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
 
     void Refresh_Click(object sender, RoutedEventArgs e) => RefreshStatus("Status refreshed.");
 
@@ -1100,6 +1182,10 @@ public sealed partial class MainWindow : Window
                         break;
                 }
                 break;
+            case ShellModule.Practice:
+                EstiPromptBox.Text = "";
+                EstiReplyText.Text = "";
+                break;
             case ShellModule.Tasks:
                 TaskTitleBox.Text = "";
                 break;
@@ -1135,7 +1221,7 @@ public sealed partial class MainWindow : Window
                 SaveTaskLocal();
                 break;
             case ShellModule.Practice:
-                RefreshStatus("Nothing to save on Practice — use Activate.");
+                ProbeOllama_Click(sender, e);
                 break;
         }
     }

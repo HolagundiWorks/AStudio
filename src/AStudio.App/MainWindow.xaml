@@ -34,7 +34,7 @@
                     <Button x:Name="NavPracticeBtn" Content="Practice" Click="NavPractice_Click"/>
                     <Button x:Name="NavTasksBtn" Content="Tasks" Click="NavTasks_Click"/>
                 </StackPanel>
-                <TextBlock Grid.Column="2" Text="Local AI · desktop" Opacity="0.55"
+                <TextBlock x:Name="LocalAiBadge" Text="Local AI · desktop" Opacity="0.55"
                            VerticalAlignment="Center" FontSize="12"/>
             </Grid>
         </Border>
@@ -196,12 +196,33 @@
                 <StackPanel x:Name="PanelPractice" Spacing="16" Visibility="Collapsed">
                     <StackPanel Spacing="4">
                         <TextBlock Text="Practice" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                        <TextBlock Text="Office health placeholder. Hub activate / flush also available in the sync tray."
+                        <TextBlock Text="Hub sync tray below · Ask ESTI runs on local Ollama only (never the cloud hub)."
                                    Opacity="0.7" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
                             BorderBrush="#D0D4DC" BorderThickness="1">
-                        <TextBlock Text="KPIs and attention queue land with Studio Intelligence (S3)."
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Ask ESTI · local" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="EstiStatusText"
+                                       Text="Probe Ollama to check local runtime."
+                                       Opacity="0.75" TextWrapping="Wrap" FontSize="12"/>
+                            <TextBox x:Name="EstiPromptBox" Header="Question"
+                                     PlaceholderText="What should we do next on the focused project?"
+                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Ask ESTI" Click="AskEsti_Click" MinHeight="44" MinWidth="120"
+                                        Background="#FF4F18" Foreground="White"/>
+                                <Button Content="Probe Ollama" Click="ProbeOllama_Click" MinHeight="44"/>
+                            </StackPanel>
+                            <TextBlock x:Name="EstiReplyText" TextWrapping="Wrap"
+                                       FontSize="13" Opacity="0.9"/>
+                            <TextBlock Text="Transcripts stay on this machine — never synced. Env: ESTI_OLLAMA_URL · ESTI_OLLAMA_MODEL."
+                                       Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                            BorderBrush="#D0D4DC" BorderThickness="1">
+                        <TextBlock Text="Deep KPIs / attention queue = later Studio Intelligence. Activate + Flush stay in the sync tray."
                                    Opacity="0.7" TextWrapping="Wrap"/>
                     </Border>
                 </StackPanel>

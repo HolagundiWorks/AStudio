@@ -33,7 +33,7 @@ drawingRegister · approvalState · projectStatus · presence
 
 ## Never sync
 
-AI transcripts · measurement scratch · nested estimate lines · drafts  
+AI transcripts (incl. Practice Ask ESTI / Ollama) · measurement scratch · nested estimate lines · drafts  
 
 ## AStudio S3 usage
 

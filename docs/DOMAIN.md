@@ -7,7 +7,7 @@ Reference IA from esti [NAVIGATION.md](https://github.com/HolagundiWorks/esti/bl
 
 | Area | Intent | Desktop status |
 | --- | --- | --- |
-| Studio Intelligence | Office health · KPIs · attention (local calc + ESTI) | Practice tray; deep KPIs later |
+| Studio Intelligence | Office health · KPIs · attention (local calc + ESTI) | Practice **Ask ESTI** (Ollama); deep KPIs later |
 | Projects / brief / R&O | Practice project record | Portfolio + Focus **Brief** |
 | Fees · proposals · invoices | India COA/GST money (paise) | Focus **Fees** · `local_fees` · `invoiceStatus` |
 | Drawings · transmittals | Issue READY → publish artifact | Focus **Drawings** · `local_drawings` · `drawingRegister` meta; artifact ingest later |
@@ -32,7 +32,20 @@ Focus → Brief | Fees | Drawings | Delivery
 | Drawings | `local_drawings` | Save drawing | `drawingRegister` |
 | Delivery | `local_delivery` | Save delivery | `phaseProgress` |
 
+## Ask ESTI (S4)
+
+| | |
+| --- | --- |
+| Runtime | Local Ollama only (`EstiOllamaClient`) |
+| Surface | Practice stage — Ask + Probe |
+| Context | Focus project brief + fees/drawings/delivery counts |
+| Sync | **Never** — transcripts stay on device |
+
+Env: `ESTI_OLLAMA_URL` (default `http://127.0.0.1:11434`) · `ESTI_OLLAMA_MODEL` (default `llama3.2`).
+
 ## Out of scope here
 
 - Full PMC contractor ERP (that is **AQC**)  
 - Browser staff workspace  
+- Cloud / VPS Ollama or hub “Hosted AI”  
+

@@ -1,6 +1,6 @@
 # AStudio WinUI shell (D5 + HCW geography)
 
-**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-10 · wave **S3** ✅  
+**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-10 · wave **S4** ✅  
 **Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md)
 
 ## Chrome (HCW scaffold)
@@ -17,42 +17,32 @@
 - Dock ≤5 actions; **one** orange commit  
 - Local AI badge on ribbon — ESTI does **not** run on the hub  
 
-| Ribbon | Stage |
-| --- | --- |
-| Portfolio | Local projects CRUD · Import from Connect |
-| Focus | **Brief · Fees · Drawings · Delivery** (S3) · engine smoke · AQC handoff |
-| Practice | Hub Activate / Flush |
-| Tasks | Local tasks · ops publish |
+| Ribbon | Stage | Dock Save | Dock Publish |
+| --- | --- | --- | --- |
+| Portfolio | Local projects · Import from Connect | Save project | Publish status |
+| Focus | Brief · Fees · Drawings · Delivery | per tab | per tab meta |
+| Practice | **Ask ESTI** (Ollama) · hub notes | Probe Ollama | Flush meta |
+| Tasks | Local tasks · ops publish | Save local | Publish to hub |
 
-### S3 — domain modules (2026-08-10)
+### S4 — Ask ESTI (2026-08-10)
 
-Project-scoped under Focus (ribbon capacity preserved):
+- `EstiOllamaClient` → `GET /api/tags` · `POST /api/chat` on local Ollama.  
+- Practice stage: Ask ESTI + Probe; Focus project context injected.  
+- Transcripts **never** synced. Env: `ESTI_OLLAMA_URL` · `ESTI_OLLAMA_MODEL`.  
+- Ribbon badge shows `Local AI · {model}` when reachable.
 
-| Tab | Store | Meta on Publish |
-| --- | --- | --- |
-| Fees | `local_fees` (paise) | `invoiceStatus` |
-| Drawings | `local_drawings` | `drawingRegister` |
-| Delivery | `local_delivery` | `phaseProgress` |
+### S3 kept
 
-Drawing PDF artifact ingest and deep COA = later (S3e).
+Focus domain tabs · paise fees · drawing register · delivery items.
 
-### S2 kept
-
-Engine smoke (S2d) · Open AQC Estimation/BBS (S2e) · Connect import auto-Focus.
-
-## Build
+## Build / run
 
 ```bat
 build-engine.cmd
 build-winui.cmd
-```
-
-## Run
-
-```bat
 set ESTI_HUB_URL=http://127.0.0.1:4000
-src\AStudio.App\bin\x64\Release\net8.0-windows10.0.19041.0\AStudio.exe
+set ESTI_OLLAMA_URL=http://127.0.0.1:11434
+set ESTI_OLLAMA_MODEL=llama3.2
 ```
 
-firm.db: `%LocalAppData%\AStudio\firm.db`  
-MSIX = D6.
+firm.db: `%LocalAppData%\AStudio\firm.db` · MSIX = D6.

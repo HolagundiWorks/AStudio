@@ -31,7 +31,8 @@ Then in the WinUI `.csproj`:
 2. Done: WinUI shell + activate/Flush.  
 3. Done: S2c Portfolio/Focus — see [ROADMAP.md](ROADMAP.md).  
 4. Done: S2d P/Invoke `bbs_engine` (`BbsEngineClient` · Focus engine smoke · `build-engine.cmd`).  
-5. Next: S3 domain modules · S4 local AI (ESTI) desktop only.
+5. Done: S3 domain modules · S4 local AI (ESTI) desktop only.  
+6. Next: S5 MSIX (D6) · S3e artifact ingest.
 
 ```bat
 build-engine.cmd

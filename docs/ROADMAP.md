@@ -1,6 +1,6 @@
 # AStudio desktop roadmap
 
-**Current wave:** S3 — Architecture domain modules  
+**Current wave:** S4 — Local ESTI  
 **Updated:** 2026-08-10  
 Upstream tracker: esti [ROADMAP.md](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/ROADMAP.md) D-waves.  
 Open source until SaaS licensing is decided.
@@ -13,28 +13,31 @@ Open source until SaaS licensing is decided.
 | S1 | SQLite + Aorms.Bridge (shared with AQC spike) | **Done** — firm.db · BridgeHost · Activate/Flush · Connect session import |
 | S2 | Shell fork: project · estimate · BBS via engine | **Done** — S2a–S2e |
 | S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — Focus tabs · local stores · allow-listed meta |
-| S4 | Local AI (ESTI) · publish path smoke to hub portal | Not started (meta flush smoke exists) |
+| S4 | Local AI (ESTI) · publish path smoke to hub portal | **Done** — Practice Ask ESTI · Ollama probe/chat · Flush stays on tray |
 | S5 | Signed installer · downloads CTA on studio.aorms.in | Not started (MSIX = D6) |
-
-## S2 checklist
-
-| Slice | Intent | Status |
-| --- | --- | --- |
-| S2a | HCW geography (Ribbon · Stage · ActionDock) | Done |
-| S2b | Tasks local + publish to hub ops | Done |
-| S2c | Portfolio: local projects CRUD · Focus selected · `projectStatus` meta | Done |
-| S2d | Wire estimate / BBS via in-process `bbs_engine` P/Invoke | Done |
-| S2e | Suite handoff to AQC Estimation/BBS from Focus | Done |
 
 ## S3 checklist
 
 | Slice | Intent | Status |
 | --- | --- | --- |
-| S3a | Focus **Brief · Fees · Drawings · Delivery** stage tabs (ribbon stays ≤4 peers) | **Done** |
-| S3b | `local_fees` (paise) · publish `invoiceStatus` | **Done** |
-| S3c | `local_drawings` register · publish `drawingRegister` | **Done** |
-| S3d | `local_delivery` snags/instructions/progress · publish `phaseProgress` | **Done** |
-| S3e | Drawing artifact ingest / PDF annotate / deep COA | Later (hub artifact path) |
+| S3a–S3d | Focus Brief · Fees · Drawings · Delivery | Done |
+| S3e | Drawing artifact ingest / PDF annotate / deep COA | Later |
+
+## S4 checklist
+
+| Slice | Intent | Status |
+| --- | --- | --- |
+| S4a | `EstiOllamaClient` → local Ollama (`ESTI_OLLAMA_URL` / `ESTI_OLLAMA_MODEL`) | **Done** |
+| S4b | Practice **Ask ESTI** panel + Probe · mission-style system prompt | **Done** |
+| S4c | Focus project context in prompt; transcripts never synced | **Done** |
+| S4d | Hub publish path | Already via Practice Flush / Focus Publish (meta allow-list) |
+
+```bat
+REM optional — defaults shown
+set ESTI_OLLAMA_URL=http://127.0.0.1:11434
+set ESTI_OLLAMA_MODEL=llama3.2
+ollama pull llama3.2
+```
 
 ## D5 — engine pin
 
@@ -48,5 +51,6 @@ build-winui.cmd
 ## Guardrails
 
 - C++ `bbs_engine` remains SoT for every quantity/money number.
-- Sync only allow-listed meta/artifacts ([SYNC-CONTRACT.md](SYNC-CONTRACT.md)).
+- ESTI / Ollama is **desktop only** — never the cloud hub or aorms.in VPS.
+- Sync only allow-listed meta/artifacts ([SYNC-CONTRACT.md](SYNC-CONTRACT.md)); **no AI transcripts**.
 - No browser staff ERP — no SaaS licence SKUs in this repo.
