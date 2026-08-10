@@ -1,6 +1,6 @@
 # AStudio desktop roadmap
 
-**Current wave:** S2 — Projects / Portfolio shell  
+**Current wave:** S3 — Architecture domain modules  
 **Updated:** 2026-08-10  
 Upstream tracker: esti [ROADMAP.md](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/ROADMAP.md) D-waves.  
 Open source until SaaS licensing is decided.
@@ -11,8 +11,8 @@ Open source until SaaS licensing is decided.
 | --- | --- | --- |
 | S0 | Repo scaffold + pin AQC engine commit | **Done** — `vendor/AQC` @ `aorms-bridge-d2` |
 | S1 | SQLite + Aorms.Bridge (shared with AQC spike) | **Done** — firm.db · BridgeHost · Activate/Flush · Connect session import |
-| S2 | Shell fork: project · estimate · BBS via engine | **In progress** — S2a–S2e ✅ (smoke); full sheets = S3 |
-| S3 | Architecture domain modules (fees, drawings, delivery) | Not started |
+| S2 | Shell fork: project · estimate · BBS via engine | **Done** — S2a–S2e |
+| S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — Focus tabs · local stores · allow-listed meta |
 | S4 | Local AI (ESTI) · publish path smoke to hub portal | Not started (meta flush smoke exists) |
 | S5 | Signed installer · downloads CTA on studio.aorms.in | Not started (MSIX = D6) |
 
@@ -22,20 +22,28 @@ Open source until SaaS licensing is decided.
 | --- | --- | --- |
 | S2a | HCW geography (Ribbon · Stage · ActionDock) | Done |
 | S2b | Tasks local + publish to hub ops | Done |
-| S2c | Portfolio: local projects CRUD · Focus selected · `projectStatus` meta | **Done** · Focus empty-state · Connect import · dock ≤5 |
-| S2d | Wire estimate / BBS via in-process `bbs_engine` P/Invoke | **Done** · `BbsEngineClient` · Focus **Engine smoke (column)** · `build-engine.cmd` |
-| S2e | Suite handoff to AQC Estimation/BBS from Focus | **Done** · Open AQC Estimation / BBS buttons (env + install paths) |
+| S2c | Portfolio: local projects CRUD · Focus selected · `projectStatus` meta | Done |
+| S2d | Wire estimate / BBS via in-process `bbs_engine` P/Invoke | Done |
+| S2e | Suite handoff to AQC Estimation/BBS from Focus | Done |
+
+## S3 checklist
+
+| Slice | Intent | Status |
+| --- | --- | --- |
+| S3a | Focus **Brief · Fees · Drawings · Delivery** stage tabs (ribbon stays ≤4 peers) | **Done** |
+| S3b | `local_fees` (paise) · publish `invoiceStatus` | **Done** |
+| S3c | `local_drawings` register · publish `drawingRegister` | **Done** |
+| S3d | `local_delivery` snags/instructions/progress · publish `phaseProgress` | **Done** |
+| S3e | Drawing artifact ingest / PDF annotate / deep COA | Later (hub artifact path) |
 
 ## D5 — engine pin
 
-See [ENGINE-PIN.md](ENGINE-PIN.md). Aorms.Bridge landed on AQC main (PR #5).
+See [ENGINE-PIN.md](ENGINE-PIN.md).
 
 ```bat
 build-engine.cmd
 build-winui.cmd
 ```
-
-`bbs_engine.dll` copies beside `AStudio.exe` when present under `vendor/AQC/BBSDesktop/build/`.
 
 ## Guardrails
 

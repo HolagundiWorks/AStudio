@@ -14,13 +14,28 @@ enum ShellModule
     Tasks,
 }
 
+enum FocusDomain
+{
+    Brief,
+    Fees,
+    Drawings,
+    Delivery,
+}
+
 public sealed partial class MainWindow : Window
 {
     readonly AormsBridge _bridge;
     readonly LocalProjectsStore _projects;
+    readonly LocalFeesStore _fees;
+    readonly LocalDrawingsStore _drawings;
+    readonly LocalDeliveryStore _delivery;
     ShellModule _module = ShellModule.Portfolio;
+    FocusDomain _focusDomain = FocusDomain.Brief;
     string? _focusProjectId;
     string? _selectedProjectId;
+    string? _selectedFeeId;
+    string? _selectedDrawingId;
+    string? _selectedDeliveryId;
 
     public MainWindow()
     {
@@ -29,7 +44,11 @@ public sealed partial class MainWindow : Window
             InitializeComponent();
             ExtendsContentIntoTitleBar = false;
             _bridge = AormsBridgeHost.CreateFromEnvironment();
-            _projects = new LocalProjectsStore(LocalProjectsStore.DefaultFirmDbPath());
+            var dbPath = LocalProjectsStore.DefaultFirmDbPath();
+            _projects = new LocalProjectsStore(dbPath);
+            _fees = new LocalFeesStore(dbPath);
+            _drawings = new LocalDrawingsStore(dbPath);
+            _delivery = new LocalDeliveryStore(dbPath);
             ShowModule(ShellModule.Portfolio);
             RefreshStatus("Ready.");
         }
@@ -73,19 +92,7 @@ public sealed partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        DockCreateBtn.Content = module switch
-        {
-            ShellModule.Portfolio => "Save project",
-            ShellModule.Focus => "Save focus",
-            ShellModule.Tasks => "Save local",
-            _ => "Save local",
-        };
-        DockCommitBtn.Content = module switch
-        {
-            ShellModule.Portfolio or ShellModule.Focus => "Publish status",
-            ShellModule.Practice => "Flush meta",
-            _ => "Publish to hub",
-        };
+        ApplyDockLabels();
         TrayText.Text = $"AStudio · {_module}";
 
         switch (module)
@@ -108,6 +115,41 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateDockEnabled();
+    }
+
+    void ApplyDockLabels()
+    {
+        if (_module == ShellModule.Focus)
+        {
+            DockCreateBtn.Content = _focusDomain switch
+            {
+                FocusDomain.Fees => "Save fee",
+                FocusDomain.Drawings => "Save drawing",
+                FocusDomain.Delivery => "Save delivery",
+                _ => "Save focus",
+            };
+            DockCommitBtn.Content = _focusDomain switch
+            {
+                FocusDomain.Fees => "Publish invoice",
+                FocusDomain.Drawings => "Publish register",
+                FocusDomain.Delivery => "Publish progress",
+                _ => "Publish status",
+            };
+            return;
+        }
+
+        DockCreateBtn.Content = _module switch
+        {
+            ShellModule.Portfolio => "Save project",
+            ShellModule.Tasks => "Save local",
+            _ => "Save local",
+        };
+        DockCommitBtn.Content = _module switch
+        {
+            ShellModule.Portfolio => "Publish status",
+            ShellModule.Practice => "Flush meta",
+            _ => "Publish to hub",
+        };
     }
 
     void UpdateDockEnabled()
@@ -234,9 +276,9 @@ public sealed partial class MainWindow : Window
         {
             FocusSubtitle.Text = "No project in focus.";
             FocusEmptyPanel.Visibility = Visibility.Visible;
-            FocusBriefPanel.Visibility = Visibility.Collapsed;
+            FocusWorkPanel.Visibility = Visibility.Collapsed;
             FocusEmptyCopy.Text =
-                "Open Portfolio, pick a local project (or Import from Connect), then Open selected in Focus. Save focus writes the brief; Publish status queues projectStatus meta to the hub.";
+                "Open Portfolio, pick a local project (or Import from Connect), then Open selected in Focus. Brief · Fees · Drawings · Delivery are project-scoped (S3).";
             FocusTitleBox.Text = "";
             FocusRefBox.Text = "";
             FocusStatusBox.Text = "";
@@ -244,6 +286,7 @@ public sealed partial class MainWindow : Window
             FocusNotesBox.Text = "";
             FocusMetaText.Text = "";
             FocusEngineText.Text = "";
+            ApplyDockLabels();
             UpdateDockEnabled();
             return;
         }
@@ -253,17 +296,18 @@ public sealed partial class MainWindow : Window
         {
             FocusSubtitle.Text = $"Missing project {id}";
             FocusEmptyPanel.Visibility = Visibility.Visible;
-            FocusBriefPanel.Visibility = Visibility.Collapsed;
+            FocusWorkPanel.Visibility = Visibility.Collapsed;
             FocusEmptyCopy.Text =
                 $"Project {id} is no longer in firm.db. Return to Portfolio and pick another, or Import from Connect.";
             _focusProjectId = null;
+            ApplyDockLabels();
             UpdateDockEnabled();
             return;
         }
 
         _focusProjectId = p.ProjectId;
         FocusEmptyPanel.Visibility = Visibility.Collapsed;
-        FocusBriefPanel.Visibility = Visibility.Visible;
+        FocusWorkPanel.Visibility = Visibility.Visible;
         FocusSubtitle.Text = $"{p.ProjectRef} · {p.Title}";
         FocusTitleBox.Text = p.Title;
         FocusRefBox.Text = p.ProjectRef;
@@ -271,12 +315,117 @@ public sealed partial class MainWindow : Window
         FocusPhaseBox.Text = p.Phase;
         FocusNotesBox.Text = p.Notes;
         FocusMetaText.Text =
-            $"id={p.ProjectId}  publish={p.PublishState}  ·  Save focus (dock) · Publish status (orange)";
+            $"id={p.ProjectId}  publish={p.PublishState}  ·  Brief / Fees / Drawings / Delivery";
         FocusEngineText.Text = BbsEngineClient.DllPresent()
             ? $"bbs_engine.dll ready · {BbsEngineClient.DllPath()}"
             : "bbs_engine.dll missing — run build-engine.cmd then rebuild AStudio.";
         TaskProjectBox.Text = p.ProjectId;
+        ShowFocusDomain(_focusDomain);
         UpdateDockEnabled();
+    }
+
+    void FocusTabBrief_Click(object sender, RoutedEventArgs e) => ShowFocusDomain(FocusDomain.Brief);
+    void FocusTabFees_Click(object sender, RoutedEventArgs e) => ShowFocusDomain(FocusDomain.Fees);
+    void FocusTabDrawings_Click(object sender, RoutedEventArgs e) => ShowFocusDomain(FocusDomain.Drawings);
+    void FocusTabDelivery_Click(object sender, RoutedEventArgs e) => ShowFocusDomain(FocusDomain.Delivery);
+
+    void ShowFocusDomain(FocusDomain domain)
+    {
+        _focusDomain = domain;
+        FocusBriefPanel.Visibility = domain == FocusDomain.Brief ? Visibility.Visible : Visibility.Collapsed;
+        FocusFeesPanel.Visibility = domain == FocusDomain.Fees ? Visibility.Visible : Visibility.Collapsed;
+        FocusDrawingsPanel.Visibility = domain == FocusDomain.Drawings ? Visibility.Visible : Visibility.Collapsed;
+        FocusDeliveryPanel.Visibility = domain == FocusDomain.Delivery ? Visibility.Visible : Visibility.Collapsed;
+
+        StyleNav(FocusTabBriefBtn, domain == FocusDomain.Brief);
+        StyleNav(FocusTabFeesBtn, domain == FocusDomain.Fees);
+        StyleNav(FocusTabDrawingsBtn, domain == FocusDomain.Drawings);
+        StyleNav(FocusTabDeliveryBtn, domain == FocusDomain.Delivery);
+
+        switch (domain)
+        {
+            case FocusDomain.Fees:
+                ReloadFees();
+                break;
+            case FocusDomain.Drawings:
+                ReloadDrawings();
+                break;
+            case FocusDomain.Delivery:
+                ReloadDelivery();
+                break;
+        }
+
+        ApplyDockLabels();
+        UpdateDockEnabled();
+    }
+
+    void ReloadFees()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            FeeListText.Text = "(no project)";
+            return;
+        }
+        var rows = _fees.ListByProject(projectId);
+        if (rows.Count == 0)
+        {
+            FeeListText.Text = "(no fees yet — fill title + amount, Save fee)";
+            _selectedFeeId = null;
+            return;
+        }
+        FeeListText.Text = string.Join("\n", rows.Select(r =>
+        {
+            var mark = r.FeeId == _selectedFeeId ? ">" : " ";
+            return $"{mark} {MoneyPaise.FormatInr(r.AmountPaise)}  {r.Status}/{r.PublishState}  {r.Title}  [{r.FeeId}]";
+        }));
+        _selectedFeeId ??= rows[0].FeeId;
+    }
+
+    void ReloadDrawings()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            DrawingListText.Text = "(no project)";
+            return;
+        }
+        var rows = _drawings.ListByProject(projectId);
+        if (rows.Count == 0)
+        {
+            DrawingListText.Text = "(no drawings yet — fill number + title, Save drawing)";
+            _selectedDrawingId = null;
+            return;
+        }
+        DrawingListText.Text = string.Join("\n", rows.Select(r =>
+        {
+            var mark = r.DrawingId == _selectedDrawingId ? ">" : " ";
+            return $"{mark} {r.Number}-Rev{r.Rev}  {r.Status}/{r.PublishState}  {r.Title}  [{r.DrawingId}]";
+        }));
+        _selectedDrawingId ??= rows[0].DrawingId;
+    }
+
+    void ReloadDelivery()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            DeliveryListText.Text = "(no project)";
+            return;
+        }
+        var rows = _delivery.ListByProject(projectId);
+        if (rows.Count == 0)
+        {
+            DeliveryListText.Text = "(no delivery items — fill kind + title, Save delivery)";
+            _selectedDeliveryId = null;
+            return;
+        }
+        DeliveryListText.Text = string.Join("\n", rows.Select(r =>
+        {
+            var mark = r.ItemId == _selectedDeliveryId ? ">" : " ";
+            return $"{mark} {r.Kind}  {r.Status}/{r.PublishState}  {r.Title}  [{r.ItemId}]";
+        }));
+        _selectedDeliveryId ??= rows[0].ItemId;
     }
 
     void SavePortfolioProject()
@@ -335,8 +484,8 @@ public sealed partial class MainWindow : Window
 
     async Task PublishProjectStatusAsync()
     {
-        // From Focus, persist brief edits before enqueue so hub gets current fields.
-        if (_module == ShellModule.Focus)
+        // From Focus brief, persist edits before enqueue so hub gets current fields.
+        if (_module == ShellModule.Focus && _focusDomain == FocusDomain.Brief)
         {
             if (!SaveFocusProject(quiet: true))
             {
@@ -385,6 +534,323 @@ public sealed partial class MainWindow : Window
             // Stay on current module (do not yank to Practice).
             if (_module == ShellModule.Portfolio) ReloadProjects();
             if (_module == ShellModule.Focus) LoadFocusForm();
+        }
+        catch (Exception ex)
+        {
+            TrayText.Text = $"Publish failed: {ex.Message}";
+        }
+    }
+
+    void SaveFee()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+        var title = FeeTitleBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(title))
+        {
+            TrayText.Text = "Fee title required.";
+            return;
+        }
+        if (!MoneyPaise.TryParseRupees(FeeAmountBox.Text, out var paise))
+        {
+            TrayText.Text = "Amount (INR) required — e.g. 125000.";
+            return;
+        }
+        var id = Guid.NewGuid().ToString("N")[..12];
+        var status = string.IsNullOrWhiteSpace(FeeStatusBox.Text) ? "DRAFT" : FeeStatusBox.Text.Trim().ToUpperInvariant();
+        _fees.Upsert(id, projectId, title, paise, status, FeeNotesBox.Text ?? "", "LOCAL");
+        _selectedFeeId = id;
+        FeeTitleBox.Text = "";
+        FeeAmountBox.Text = "";
+        FeeStatusBox.Text = "";
+        FeeNotesBox.Text = "";
+        ReloadFees();
+        TrayText.Text = $"Saved fee {id} · {MoneyPaise.FormatInr(paise)}";
+    }
+
+    async Task PublishFeeAsync()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+        // Prefer form fields if filled; else publish selected row.
+        LocalFee? row = null;
+        var title = FeeTitleBox.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(title) && MoneyPaise.TryParseRupees(FeeAmountBox.Text, out var paise))
+        {
+            var id = Guid.NewGuid().ToString("N")[..12];
+            var status = string.IsNullOrWhiteSpace(FeeStatusBox.Text) ? "DRAFT" : FeeStatusBox.Text.Trim().ToUpperInvariant();
+            _fees.Upsert(id, projectId, title, paise, status, FeeNotesBox.Text ?? "", "LOCAL");
+            _selectedFeeId = id;
+            FeeTitleBox.Text = "";
+            FeeAmountBox.Text = "";
+            FeeStatusBox.Text = "";
+            FeeNotesBox.Text = "";
+            row = _fees.Get(id);
+        }
+        else if (_selectedFeeId is not null)
+        {
+            row = _fees.Get(_selectedFeeId);
+        }
+        else
+        {
+            row = _fees.ListByProject(projectId).FirstOrDefault();
+        }
+
+        if (row is null)
+        {
+            TrayText.Text = "Save a fee first (title + amount).";
+            return;
+        }
+
+        try
+        {
+            _bridge.EnqueueMeta("invoiceStatus", row.FeeId, new Dictionary<string, object?>
+            {
+                ["feeId"] = row.FeeId,
+                ["projectId"] = row.ProjectId,
+                ["title"] = row.Title,
+                ["amountPaise"] = row.AmountPaise,
+                ["status"] = row.Status,
+                ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+            });
+            _fees.Upsert(row.FeeId, row.ProjectId, row.Title, row.AmountPaise, row.Status, row.Notes, "QUEUED");
+            var result = await _bridge.FlushAsync();
+            if (result.SkippedReason is not null)
+            {
+                TrayText.Text =
+                    $"Queued invoiceStatus; flush skipped={result.SkippedReason} — Activate on Practice.";
+                LogText.Text = $"Flush skipped={result.SkippedReason}";
+            }
+            else
+            {
+                _fees.Upsert(row.FeeId, row.ProjectId, row.Title, row.AmountPaise, row.Status, row.Notes, "PUBLISHED");
+                TrayText.Text = $"Published invoice · {MoneyPaise.FormatInr(row.AmountPaise)} · metaSent={result.MetaSent}";
+                LogText.Text = $"invoiceStatus OK · {row.FeeId}";
+            }
+            ReloadFees();
+        }
+        catch (Exception ex)
+        {
+            TrayText.Text = $"Publish failed: {ex.Message}";
+        }
+    }
+
+    void SaveDrawing()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+        var number = DrawingNumberBox.Text?.Trim() ?? "";
+        var title = DrawingTitleBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(number) || string.IsNullOrEmpty(title))
+        {
+            TrayText.Text = "Drawing number and title required.";
+            return;
+        }
+        var id = Guid.NewGuid().ToString("N")[..12];
+        var rev = string.IsNullOrWhiteSpace(DrawingRevBox.Text) ? "A" : DrawingRevBox.Text.Trim();
+        var status = string.IsNullOrWhiteSpace(DrawingStatusBox.Text)
+            ? "WIP"
+            : DrawingStatusBox.Text.Trim().ToUpperInvariant();
+        _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL");
+        _selectedDrawingId = id;
+        DrawingNumberBox.Text = "";
+        DrawingTitleBox.Text = "";
+        DrawingRevBox.Text = "";
+        DrawingStatusBox.Text = "";
+        DrawingNotesBox.Text = "";
+        ReloadDrawings();
+        TrayText.Text = $"Saved drawing {number}-Rev{rev}";
+    }
+
+    async Task PublishDrawingAsync()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+
+        LocalDrawing? row = null;
+        var number = DrawingNumberBox.Text?.Trim() ?? "";
+        var title = DrawingTitleBox.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(number) && !string.IsNullOrEmpty(title))
+        {
+            var id = Guid.NewGuid().ToString("N")[..12];
+            var rev = string.IsNullOrWhiteSpace(DrawingRevBox.Text) ? "A" : DrawingRevBox.Text.Trim();
+            var status = string.IsNullOrWhiteSpace(DrawingStatusBox.Text)
+                ? "READY"
+                : DrawingStatusBox.Text.Trim().ToUpperInvariant();
+            _drawings.Upsert(id, projectId, number, title, rev, status, DrawingNotesBox.Text ?? "", "LOCAL");
+            _selectedDrawingId = id;
+            DrawingNumberBox.Text = "";
+            DrawingTitleBox.Text = "";
+            DrawingRevBox.Text = "";
+            DrawingStatusBox.Text = "";
+            DrawingNotesBox.Text = "";
+            row = _drawings.Get(id);
+        }
+        else if (_selectedDrawingId is not null)
+        {
+            row = _drawings.Get(_selectedDrawingId);
+        }
+        else
+        {
+            row = _drawings.ListByProject(projectId).FirstOrDefault();
+        }
+
+        if (row is null)
+        {
+            TrayText.Text = "Save a drawing first (number + title).";
+            return;
+        }
+
+        try
+        {
+            _bridge.EnqueueMeta("drawingRegister", row.DrawingId, new Dictionary<string, object?>
+            {
+                ["drawingId"] = row.DrawingId,
+                ["projectId"] = row.ProjectId,
+                ["number"] = row.Number,
+                ["title"] = row.Title,
+                ["rev"] = row.Rev,
+                ["status"] = row.Status,
+                ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+            });
+            _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "QUEUED");
+            var result = await _bridge.FlushAsync();
+            if (result.SkippedReason is not null)
+            {
+                TrayText.Text =
+                    $"Queued drawingRegister; flush skipped={result.SkippedReason} — Activate on Practice.";
+                LogText.Text = $"Flush skipped={result.SkippedReason}";
+            }
+            else
+            {
+                _drawings.Upsert(row.DrawingId, row.ProjectId, row.Number, row.Title, row.Rev, row.Status, row.Notes, "PUBLISHED");
+                TrayText.Text = $"Published register · {row.Number}-Rev{row.Rev} · metaSent={result.MetaSent}";
+                LogText.Text = $"drawingRegister OK · {row.DrawingId}";
+            }
+            ReloadDrawings();
+        }
+        catch (Exception ex)
+        {
+            TrayText.Text = $"Publish failed: {ex.Message}";
+        }
+    }
+
+    void SaveDelivery()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+        var title = DeliveryTitleBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(title))
+        {
+            TrayText.Text = "Delivery title required.";
+            return;
+        }
+        var id = Guid.NewGuid().ToString("N")[..12];
+        var kind = string.IsNullOrWhiteSpace(DeliveryKindBox.Text)
+            ? "PROGRESS"
+            : DeliveryKindBox.Text.Trim().ToUpperInvariant();
+        var status = string.IsNullOrWhiteSpace(DeliveryStatusBox.Text)
+            ? "OPEN"
+            : DeliveryStatusBox.Text.Trim().ToUpperInvariant();
+        _delivery.Upsert(id, projectId, kind, title, status, DeliveryNotesBox.Text ?? "", "LOCAL");
+        _selectedDeliveryId = id;
+        DeliveryKindBox.Text = "";
+        DeliveryTitleBox.Text = "";
+        DeliveryStatusBox.Text = "";
+        DeliveryNotesBox.Text = "";
+        ReloadDelivery();
+        TrayText.Text = $"Saved delivery {kind} · {id}";
+    }
+
+    async Task PublishDeliveryAsync()
+    {
+        var projectId = ResolveFocusProjectId();
+        if (projectId is null)
+        {
+            TrayText.Text = "No project in focus.";
+            return;
+        }
+
+        LocalDeliveryItem? row = null;
+        var title = DeliveryTitleBox.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(title))
+        {
+            var id = Guid.NewGuid().ToString("N")[..12];
+            var kind = string.IsNullOrWhiteSpace(DeliveryKindBox.Text)
+                ? "PROGRESS"
+                : DeliveryKindBox.Text.Trim().ToUpperInvariant();
+            var status = string.IsNullOrWhiteSpace(DeliveryStatusBox.Text)
+                ? "OPEN"
+                : DeliveryStatusBox.Text.Trim().ToUpperInvariant();
+            _delivery.Upsert(id, projectId, kind, title, status, DeliveryNotesBox.Text ?? "", "LOCAL");
+            _selectedDeliveryId = id;
+            DeliveryKindBox.Text = "";
+            DeliveryTitleBox.Text = "";
+            DeliveryStatusBox.Text = "";
+            DeliveryNotesBox.Text = "";
+            row = _delivery.Get(id);
+        }
+        else if (_selectedDeliveryId is not null)
+        {
+            row = _delivery.Get(_selectedDeliveryId);
+        }
+        else
+        {
+            row = _delivery.ListByProject(projectId).FirstOrDefault();
+        }
+
+        if (row is null)
+        {
+            TrayText.Text = "Save a delivery item first.";
+            return;
+        }
+
+        try
+        {
+            _bridge.EnqueueMeta("phaseProgress", row.ItemId, new Dictionary<string, object?>
+            {
+                ["itemId"] = row.ItemId,
+                ["projectId"] = row.ProjectId,
+                ["kind"] = row.Kind,
+                ["title"] = row.Title,
+                ["status"] = row.Status,
+                ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+            });
+            _delivery.Upsert(row.ItemId, row.ProjectId, row.Kind, row.Title, row.Status, row.Notes, "QUEUED");
+            var result = await _bridge.FlushAsync();
+            if (result.SkippedReason is not null)
+            {
+                TrayText.Text =
+                    $"Queued phaseProgress; flush skipped={result.SkippedReason} — Activate on Practice.";
+                LogText.Text = $"Flush skipped={result.SkippedReason}";
+            }
+            else
+            {
+                _delivery.Upsert(row.ItemId, row.ProjectId, row.Kind, row.Title, row.Status, row.Notes, "PUBLISHED");
+                TrayText.Text = $"Published progress · {row.Kind} · metaSent={result.MetaSent}";
+                LogText.Text = $"phaseProgress OK · {row.ItemId}";
+            }
+            ReloadDelivery();
         }
         catch (Exception ex)
         {
@@ -608,8 +1074,31 @@ public sealed partial class MainWindow : Window
                 ProjectPhaseBox.Text = "";
                 break;
             case ShellModule.Focus:
-                if (FocusBriefPanel.Visibility == Visibility.Visible)
-                    FocusNotesBox.Text = "";
+                switch (_focusDomain)
+                {
+                    case FocusDomain.Fees:
+                        FeeTitleBox.Text = "";
+                        FeeAmountBox.Text = "";
+                        FeeStatusBox.Text = "";
+                        FeeNotesBox.Text = "";
+                        break;
+                    case FocusDomain.Drawings:
+                        DrawingNumberBox.Text = "";
+                        DrawingTitleBox.Text = "";
+                        DrawingRevBox.Text = "";
+                        DrawingStatusBox.Text = "";
+                        DrawingNotesBox.Text = "";
+                        break;
+                    case FocusDomain.Delivery:
+                        DeliveryKindBox.Text = "";
+                        DeliveryTitleBox.Text = "";
+                        DeliveryStatusBox.Text = "";
+                        DeliveryNotesBox.Text = "";
+                        break;
+                    default:
+                        FocusNotesBox.Text = "";
+                        break;
+                }
                 break;
             case ShellModule.Tasks:
                 TaskTitleBox.Text = "";
@@ -626,7 +1115,21 @@ public sealed partial class MainWindow : Window
                 SavePortfolioProject();
                 break;
             case ShellModule.Focus:
-                SaveFocusProject();
+                switch (_focusDomain)
+                {
+                    case FocusDomain.Fees:
+                        SaveFee();
+                        break;
+                    case FocusDomain.Drawings:
+                        SaveDrawing();
+                        break;
+                    case FocusDomain.Delivery:
+                        SaveDelivery();
+                        break;
+                    default:
+                        SaveFocusProject();
+                        break;
+                }
                 break;
             case ShellModule.Tasks:
                 SaveTaskLocal();
@@ -646,7 +1149,10 @@ public sealed partial class MainWindow : Window
                 TrayText.Text = "Projects reloaded.";
                 break;
             case ShellModule.Focus:
-                LoadFocusForm();
+                if (_focusDomain == FocusDomain.Brief)
+                    LoadFocusForm();
+                else
+                    ShowFocusDomain(_focusDomain);
                 TrayText.Text = "Focus reloaded.";
                 break;
             case ShellModule.Practice:
@@ -664,8 +1170,24 @@ public sealed partial class MainWindow : Window
         switch (_module)
         {
             case ShellModule.Portfolio:
-            case ShellModule.Focus:
                 await PublishProjectStatusAsync();
+                break;
+            case ShellModule.Focus:
+                switch (_focusDomain)
+                {
+                    case FocusDomain.Fees:
+                        await PublishFeeAsync();
+                        break;
+                    case FocusDomain.Drawings:
+                        await PublishDrawingAsync();
+                        break;
+                    case FocusDomain.Delivery:
+                        await PublishDeliveryAsync();
+                        break;
+                    default:
+                        await PublishProjectStatusAsync();
+                        break;
+                }
                 break;
             case ShellModule.Practice:
                 Flush_Click(sender, e);

@@ -35,4 +35,13 @@ drawingRegister · approvalState · projectStatus · presence
 
 AI transcripts · measurement scratch · nested estimate lines · drafts  
 
+## AStudio S3 usage
+
+| Focus tab | Enqueued entity | Notes |
+| --- | --- | --- |
+| Brief | `projectStatus` | Portfolio / Focus |
+| Fees | `invoiceStatus` | `amountPaise` in patch |
+| Drawings | `drawingRegister` | Meta only; artifact ingest later |
+| Delivery | `phaseProgress` | Snag / instruction / progress kinds |
+
 Bump this pin when esti HUB-API / bridge version bumps.
