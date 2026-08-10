@@ -5,296 +5,407 @@
     Title="AStudio">
 
     <!--
-      HCW geography · S3:
-      Ribbon (Focus · Portfolio · Practice · Tasks) · Focus domain tabs · ActionDock · sync tray.
+      HCW geography · web chrome parity:
+      Top ribbon (brand/search/status) · Stage · floating ActionDock · floating Taskbar · Clock.
+      Module nav lives in the taskbar (Projects · Clients · People · Office · Finance · Admin).
     -->
-    <Grid>
+    <Grid Background="#F2F4F7">
         <Grid.RowDefinitions>
             <RowDefinition Height="56"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="64"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#ECEEF2" Padding="16,0">
+        <!-- TOP RIBBON — brand · search · health · Local AI · account (no module peers) -->
+        <Border Grid.Row="0" Background="#ECEEF2" Padding="16,0" BorderBrush="#D0D4DC" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="AStudio" FontSize="18" FontWeight="SemiBold" Foreground="#141517"/>
-                    <TextBlock Text="Accelerated Studio" Opacity="0.65" VerticalAlignment="Center" Foreground="#141517"/>
+                <Button Background="Transparent" BorderThickness="0" Click="NavHome_Click" Padding="0" MinHeight="44">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="8" Background="#FF4F18">
+                            <TextBlock Text="A" Foreground="White" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Spacing="0" VerticalAlignment="Center">
+                            <TextBlock Text="AStudio" FontSize="16" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Accelerated Studio" FontSize="11" Opacity="0.55" Foreground="#141517"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+                <TextBox x:Name="SearchBox" Grid.Column="1" MaxWidth="360" HorizontalAlignment="Stretch"
+                         Margin="24,0" VerticalAlignment="Center" PlaceholderText="Search modules… (Enter)"
+                         KeyDown="SearchBox_KeyDown"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock x:Name="HealthText" Text="Office · calm" FontSize="12" Opacity="0.7"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="LocalAiBadge" Text="Local AI · desktop" Opacity="0.55"
+                               VerticalAlignment="Center" FontSize="12"/>
+                    <Button Content="Account" Click="AccountStub_Click" MinHeight="35" Padding="12,4"/>
+                    <Button Content="Ask ESTI" Click="ToggleRightSlot_Click" MinHeight="35" Padding="12,4"
+                            Background="#FF4F18" Foreground="White"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Button x:Name="NavFocusBtn" Content="Focus" Click="NavFocus_Click"/>
-                    <Button x:Name="NavPortfolioBtn" Content="Portfolio" Click="NavPortfolio_Click"/>
-                    <Button x:Name="NavPracticeBtn" Content="Practice" Click="NavPractice_Click"/>
-                    <Button x:Name="NavTasksBtn" Content="Tasks" Click="NavTasks_Click"/>
-                </StackPanel>
-                <TextBlock x:Name="LocalAiBadge" Text="Local AI · desktop" Opacity="0.55"
-                           VerticalAlignment="Center" FontSize="12"/>
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="1" Background="#F2F4F7" Padding="24">
-            <Grid MaxWidth="960" HorizontalAlignment="Left">
+        <!-- STAGE + right slot -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="RightSlotCol" Width="0"/>
+            </Grid.ColumnDefinitions>
 
-                <StackPanel x:Name="PanelPortfolio" Spacing="16" Visibility="Collapsed">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Portfolio" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                        <TextBlock Text="Practice projects in firm.db. Select one to Focus; publish status meta to the hub."
-                                   Opacity="0.7" TextWrapping="Wrap"/>
-                    </StackPanel>
+            <ScrollViewer Background="#F2F4F7" Padding="24,24,24,180">
+                <Grid MaxWidth="1200" HorizontalAlignment="Left">
 
-                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="AORMS Connect" FontWeight="SemiBold"/>
-                            <TextBlock Text="Pull projects from Connect’s shared catalog into this firm.db."
+                    <!-- HOME · Studio Intelligence -->
+                    <StackPanel x:Name="PanelHome" Spacing="16" Visibility="Visible">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Studio Intelligence" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Practice home. Ask ESTI opens in the right slot (local Ollama). Deep KPIs later."
                                        Opacity="0.7" TextWrapping="Wrap"/>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button x:Name="ImportConnectBtn" Content="Import from Connect"
-                                        Click="ImportCatalog_Click" MinHeight="44" MinWidth="180"/>
-                            </StackPanel>
-                            <TextBlock x:Name="CatalogImportNote" TextWrapping="Wrap" FontSize="12"
-                                       Opacity="0.75"
-                                       Text="No import yet — run AORMS Connect, then Import from Connect here or on the dock."/>
                         </StackPanel>
-                    </Border>
-
-                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="New project" FontWeight="SemiBold"/>
-                            <TextBox x:Name="ProjectTitleBox" Header="Title" PlaceholderText="Residence · Hospet"/>
-                            <TextBox x:Name="ProjectRefBox" Header="Ref" PlaceholderText="AST-2026-001"/>
-                            <TextBox x:Name="ProjectPhaseBox" Header="Phase" PlaceholderText="Concept / DD / Tender"/>
-                            <TextBlock Text="Local projects" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                            <TextBlock x:Name="ProjectListText" FontFamily="Consolas" FontSize="12"
-                                       TextWrapping="Wrap"/>
-                            <Button Content="Open selected in Focus" Click="OpenSelectedFocus_Click"
-                                    MinHeight="44"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel x:Name="PanelFocus" Spacing="16" Visibility="Collapsed">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Focus" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                        <TextBlock x:Name="FocusSubtitle" Text="No project in focus."
-                                   Opacity="0.7" TextWrapping="Wrap"/>
-                    </StackPanel>
-
-                    <Border x:Name="FocusEmptyPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="No project selected"
-                                       FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock x:Name="FocusEmptyCopy"
-                                       Text="Open Portfolio, pick a local project (or Import from Connect), then Open selected in Focus. Save focus writes the brief; Publish status queues projectStatus meta to the hub."
-                                       Opacity="0.7" TextWrapping="Wrap"/>
-                            <Button Content="Go to Portfolio" Click="NavPortfolio_Click"
-                                    MinHeight="44" MinWidth="140"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- S3: project workspace — Brief · Fees · Drawings · Delivery -->
-                    <StackPanel x:Name="FocusWorkPanel" Spacing="12" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="FocusTabBriefBtn" Content="Brief" Click="FocusTabBrief_Click"/>
-                            <Button x:Name="FocusTabFeesBtn" Content="Fees" Click="FocusTabFees_Click"/>
-                            <Button x:Name="FocusTabDrawingsBtn" Content="Drawings" Click="FocusTabDrawings_Click"/>
-                            <Button x:Name="FocusTabDeliveryBtn" Content="Delivery" Click="FocusTabDelivery_Click"/>
-                        </StackPanel>
-
-                        <Border x:Name="FocusBriefPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
                             <StackPanel Spacing="8">
-                                <TextBox x:Name="FocusTitleBox" Header="Title"/>
-                                <TextBox x:Name="FocusRefBox" Header="Ref"/>
-                                <TextBox x:Name="FocusStatusBox" Header="Status" PlaceholderText="ACTIVE / HOLD / CLOSED"/>
-                                <TextBox x:Name="FocusPhaseBox" Header="Phase"/>
-                                <TextBox x:Name="FocusNotesBox" Header="Brief / notes" AcceptsReturn="True"
-                                         TextWrapping="Wrap" MinHeight="80"/>
-                                <TextBlock x:Name="FocusMetaText" FontFamily="Consolas" FontSize="12"
-                                           Opacity="0.7" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Content="Engine smoke (column)" Click="EngineSmoke_Click"
-                                            MinHeight="44"/>
-                                    <Button Content="Open AQC Estimation" Click="OpenAqcEstimation_Click"
-                                            MinHeight="44"/>
-                                    <Button Content="Open AQC BBS" Click="OpenAqcBbs_Click"
-                                            MinHeight="44"/>
-                                </StackPanel>
-                                <TextBlock x:Name="FocusEngineText" FontFamily="Consolas" FontSize="12"
+                                <TextBlock Text="Capacity" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="HomeCapacityText" FontFamily="Consolas" FontSize="12"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock x:Name="HomeHubText" FontFamily="Consolas" FontSize="12"
                                            Opacity="0.75" TextWrapping="Wrap"/>
-                                <TextBlock Text="Dock: Save focus · Publish status. Engine smoke = S2d; full BBS in AQC (S2e)."
-                                           Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-
-                        <Border x:Name="FocusFeesPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Fees · proposals / invoices" FontWeight="SemiBold"/>
-                                <TextBlock Text="Amounts in INR; stored as paise. Publish queues invoiceStatus meta."
-                                           Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
-                                <TextBox x:Name="FeeTitleBox" Header="Title" PlaceholderText="Concept fee · Stage 1"/>
-                                <TextBox x:Name="FeeAmountBox" Header="Amount (INR)" PlaceholderText="125000"/>
-                                <TextBox x:Name="FeeStatusBox" Header="Status" PlaceholderText="DRAFT / ISSUED / PAID"/>
-                                <TextBox x:Name="FeeNotesBox" Header="Notes" AcceptsReturn="True"
-                                         TextWrapping="Wrap" MinHeight="48"/>
-                                <TextBlock x:Name="FeeListText" FontFamily="Consolas" FontSize="12"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="Dock: Save fee · Publish invoice."
-                                           Opacity="0.55" FontSize="12"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border x:Name="FocusDrawingsPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Drawings · register + artifact" FontWeight="SemiBold"/>
-                                <TextBlock Text="WIP → READY → ISSUED. Publish = drawingRegister meta. Queue artifact = ingest envelope (sha256; binary upload later)."
-                                           Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
-                                <TextBox x:Name="DrawingNumberBox" Header="Number" PlaceholderText="A-101"/>
-                                <TextBox x:Name="DrawingTitleBox" Header="Title" PlaceholderText="Ground floor plan"/>
-                                <TextBox x:Name="DrawingRevBox" Header="Rev" PlaceholderText="A"/>
-                                <TextBox x:Name="DrawingStatusBox" Header="Status" PlaceholderText="WIP / READY / ISSUED"/>
-                                <TextBox x:Name="DrawingPathBox" Header="Local file path (optional)"
-                                         PlaceholderText="D:\drawings\A-101.pdf"/>
-                                <TextBox x:Name="DrawingNotesBox" Header="Notes" AcceptsReturn="True"
-                                         TextWrapping="Wrap" MinHeight="48"/>
+                                <TextBlock Text="ESTI · local" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="EstiStatusText" Opacity="0.75" TextWrapping="Wrap" FontSize="12"
+                                           Text="Probe Ollama from the right slot or dock."/>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Content="Queue artifact ingest" Click="QueueDrawingArtifact_Click"
-                                            MinHeight="44"/>
+                                    <Button Content="Open Ask ESTI" Click="ToggleRightSlot_Click" MinHeight="44"
+                                            Background="#FF4F18" Foreground="White"/>
+                                    <Button Content="Probe Ollama" Click="ProbeOllama_Click" MinHeight="44"/>
+                                    <Button Content="Go to Projects" Click="NavProjects_Click" MinHeight="44"/>
                                 </StackPanel>
-                                <TextBlock x:Name="DrawingListText" FontFamily="Consolas" FontSize="12"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="Dock: Save drawing · Publish register. Artifact uses Bridge POST /api/sync/ingest."
-                                           Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
 
-                        <Border x:Name="FocusDeliveryPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+                    <!-- PROJECTS (was Portfolio) -->
+                    <StackPanel x:Name="PanelProjects" Spacing="16" Visibility="Collapsed">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Projects" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Practice projects in firm.db. Open one for Focus (Brief · Fees · Drawings · Delivery)."
+                                       Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="AORMS Connect" FontWeight="SemiBold"/>
+                                <TextBlock Text="Pull projects from Connect’s shared catalog into this firm.db."
+                                           Opacity="0.7" TextWrapping="Wrap"/>
+                                <Button x:Name="ImportConnectBtn" Content="Import from Connect"
+                                        Click="ImportCatalog_Click" MinHeight="44" MinWidth="180"
+                                        HorizontalAlignment="Left"/>
+                                <TextBlock x:Name="CatalogImportNote" TextWrapping="Wrap" FontSize="12"
+                                           Opacity="0.75"
+                                           Text="No import yet — run AORMS Connect, then Import from Connect."/>
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Delivery · snags · instructions · progress" FontWeight="SemiBold"/>
-                                <TextBlock Text="Kind: SNAG / INSTRUCTION / PROGRESS. Publish queues phaseProgress meta. BBS via engine / AQC."
-                                           Opacity="0.7" TextWrapping="Wrap" FontSize="12"/>
-                                <TextBox x:Name="DeliveryKindBox" Header="Kind" PlaceholderText="SNAG / INSTRUCTION / PROGRESS"/>
-                                <TextBox x:Name="DeliveryTitleBox" Header="Title" PlaceholderText="Site visit · Week 12"/>
-                                <TextBox x:Name="DeliveryStatusBox" Header="Status" PlaceholderText="OPEN / DONE"/>
-                                <TextBox x:Name="DeliveryNotesBox" Header="Notes" AcceptsReturn="True"
-                                         TextWrapping="Wrap" MinHeight="48"/>
-                                <TextBlock x:Name="DeliveryListText" FontFamily="Consolas" FontSize="12"
+                                <TextBlock Text="New project" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ProjectTitleBox" Header="Title" PlaceholderText="Residence · Hospet"/>
+                                <TextBox x:Name="ProjectRefBox" Header="Ref" PlaceholderText="AST-2026-001"/>
+                                <TextBox x:Name="ProjectPhaseBox" Header="Phase" PlaceholderText="Concept / DD / Tender"/>
+                                <TextBlock Text="Local projects" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                <TextBlock x:Name="ProjectListText" FontFamily="Consolas" FontSize="12"
                                            TextWrapping="Wrap"/>
-                                <TextBlock Text="Dock: Save delivery · Publish progress."
-                                           Opacity="0.55" FontSize="12"/>
+                                <Button Content="Open selected in Focus" Click="OpenSelectedFocus_Click"
+                                        MinHeight="44" HorizontalAlignment="Left"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                </StackPanel>
 
-                <StackPanel x:Name="PanelPractice" Spacing="16" Visibility="Collapsed">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Practice" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                        <TextBlock Text="Hub sync tray below · Ask ESTI runs on local Ollama only (never the cloud hub)."
-                                   Opacity="0.7" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Ask ESTI · local" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="EstiStatusText"
-                                       Text="Probe Ollama to check local runtime."
-                                       Opacity="0.75" TextWrapping="Wrap" FontSize="12"/>
-                            <TextBox x:Name="EstiPromptBox" Header="Question"
-                                     PlaceholderText="What should we do next on the focused project?"
-                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64"/>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Content="Ask ESTI" Click="AskEsti_Click" MinHeight="44" MinWidth="120"
-                                        Background="#FF4F18" Foreground="White"/>
-                                <Button Content="Probe Ollama" Click="ProbeOllama_Click" MinHeight="44"/>
+                    <!-- PROJECT FOCUS -->
+                    <StackPanel x:Name="PanelFocus" Spacing="16" Visibility="Collapsed">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Project Focus" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock x:Name="FocusSubtitle" Text="No project in focus."
+                                       Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Border x:Name="FocusEmptyPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="No project selected" FontWeight="SemiBold" Foreground="#141517"/>
+                                <TextBlock x:Name="FocusEmptyCopy"
+                                           Text="Open Projects, pick a local project (or Import from Connect), then Open selected in Focus."
+                                           Opacity="0.7" TextWrapping="Wrap"/>
+                                <Button Content="Go to Projects" Click="NavProjects_Click"
+                                        MinHeight="44" MinWidth="140" HorizontalAlignment="Left"/>
                             </StackPanel>
-                            <TextBlock x:Name="EstiReplyText" TextWrapping="Wrap"
-                                       FontSize="13" Opacity="0.9"/>
-                            <TextBlock Text="Transcripts stay on this machine — never synced. Env: ESTI_OLLAMA_URL · ESTI_OLLAMA_MODEL."
-                                       Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
+                        </Border>
+                        <StackPanel x:Name="FocusWorkPanel" Spacing="12" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="FocusTabBriefBtn" Content="Brief" Click="FocusTabBrief_Click"/>
+                                <Button x:Name="FocusTabFeesBtn" Content="Fees" Click="FocusTabFees_Click"/>
+                                <Button x:Name="FocusTabDrawingsBtn" Content="Drawings" Click="FocusTabDrawings_Click"/>
+                                <Button x:Name="FocusTabDeliveryBtn" Content="Delivery" Click="FocusTabDelivery_Click"/>
+                            </StackPanel>
+                            <Border x:Name="FocusBriefPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
+                                <StackPanel Spacing="8">
+                                    <TextBox x:Name="FocusTitleBox" Header="Title"/>
+                                    <TextBox x:Name="FocusRefBox" Header="Ref"/>
+                                    <TextBox x:Name="FocusStatusBox" Header="Status" PlaceholderText="ACTIVE / HOLD / CLOSED"/>
+                                    <TextBox x:Name="FocusPhaseBox" Header="Phase"/>
+                                    <TextBox x:Name="FocusNotesBox" Header="Brief / notes" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="80"/>
+                                    <TextBlock x:Name="FocusMetaText" FontFamily="Consolas" FontSize="12"
+                                               Opacity="0.7" TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Engine smoke (column)" Click="EngineSmoke_Click" MinHeight="44"/>
+                                        <Button Content="Open AQC Estimation" Click="OpenAqcEstimation_Click" MinHeight="44"/>
+                                        <Button Content="Open AQC BBS" Click="OpenAqcBbs_Click" MinHeight="44"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="FocusEngineText" FontFamily="Consolas" FontSize="12"
+                                               Opacity="0.75" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="FocusFeesPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Fees · proposals / invoices" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="FeeTitleBox" Header="Title" PlaceholderText="Concept fee · Stage 1"/>
+                                    <TextBox x:Name="FeeAmountBox" Header="Amount (INR)" PlaceholderText="125000"/>
+                                    <TextBox x:Name="FeeStatusBox" Header="Status" PlaceholderText="DRAFT / ISSUED / PAID"/>
+                                    <TextBox x:Name="FeeNotesBox" Header="Notes" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="48"/>
+                                    <TextBlock x:Name="FeeListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="FocusDrawingsPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Drawings · register + artifact" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="DrawingNumberBox" Header="Number" PlaceholderText="A-101"/>
+                                    <TextBox x:Name="DrawingTitleBox" Header="Title" PlaceholderText="Ground floor plan"/>
+                                    <TextBox x:Name="DrawingRevBox" Header="Rev" PlaceholderText="A"/>
+                                    <TextBox x:Name="DrawingStatusBox" Header="Status" PlaceholderText="WIP / READY / ISSUED"/>
+                                    <TextBox x:Name="DrawingPathBox" Header="Local file path (optional)"
+                                             PlaceholderText="D:\drawings\A-101.pdf"/>
+                                    <TextBox x:Name="DrawingNotesBox" Header="Notes" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="48"/>
+                                    <Button Content="Queue artifact ingest" Click="QueueDrawingArtifact_Click"
+                                            MinHeight="44" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="DrawingListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="FocusDeliveryPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Delivery · snags · instructions · progress" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="DeliveryKindBox" Header="Kind" PlaceholderText="SNAG / INSTRUCTION / PROGRESS"/>
+                                    <TextBox x:Name="DeliveryTitleBox" Header="Title" PlaceholderText="Site visit · Week 12"/>
+                                    <TextBox x:Name="DeliveryStatusBox" Header="Status" PlaceholderText="OPEN / DONE"/>
+                                    <TextBox x:Name="DeliveryNotesBox" Header="Notes" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="48"/>
+                                    <TextBlock x:Name="DeliveryListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1">
-                        <TextBlock Text="Deep KPIs / attention queue = later Studio Intelligence. Activate + Flush stay in the sync tray."
-                                   Opacity="0.7" TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel x:Name="PanelTasks" Spacing="16" Visibility="Visible">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Tasks" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                        <TextBlock Text="Local firm.db → publish to Mongo ops."
-                                   Opacity="0.7" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                            BorderBrush="#D0D4DC" BorderThickness="1">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Task board" FontWeight="SemiBold"/>
-                            <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
-                            <TextBox x:Name="TaskProjectBox" Header="Project id"
-                                     PlaceholderText="Uses Focus project when set"/>
-                            <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12"
-                                       TextWrapping="Wrap"/>
+
+                    <!-- CLIENTS -->
+                    <StackPanel x:Name="PanelClients" Spacing="16" Visibility="Collapsed">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Clients" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Local client directory in firm.db."
+                                       Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-        </ScrollViewer>
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <TextBox x:Name="ClientNameBox" Header="Name" PlaceholderText="Owner / developer firm"/>
+                                <TextBox x:Name="ClientContactBox" Header="Contact" PlaceholderText="Primary person"/>
+                                <TextBox x:Name="ClientEmailBox" Header="Email" PlaceholderText="ops@client.example"/>
+                                <TextBox x:Name="ClientNotesBox" Header="Notes" AcceptsReturn="True"
+                                         TextWrapping="Wrap" MinHeight="48"/>
+                                <TextBlock x:Name="ClientListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
 
-        <!-- ActionDock ≤5: destroy LEFT · create CENTRE · commit RIGHT (one orange Publish) -->
-        <Border Grid.Row="2" Background="#ECEEF2" Padding="16,8" BorderBrush="#D0D4DC" BorderThickness="0,1,0,0">
-            <Grid MaxWidth="960" HorizontalAlignment="Stretch">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Content="Clear form" Click="ClearForm_Click" MinHeight="44"/>
-                    <Button x:Name="DockImportBtn" Content="Import from Connect"
-                            Click="ImportCatalog_Click" MinHeight="44" Visibility="Collapsed"/>
+                    <!-- TASKS -->
+                    <StackPanel x:Name="PanelTasks" Spacing="16" Visibility="Collapsed">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Tasks" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Local firm.db → publish to Mongo ops."
+                                       Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
+                                <TextBox x:Name="TaskProjectBox" Header="Project id"
+                                         PlaceholderText="Uses Focus project when set"/>
+                                <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- STUB destinations -->
+                    <StackPanel x:Name="PanelStub" Spacing="16" Visibility="Collapsed">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="StubTitle" Text="Coming on desktop" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock x:Name="StubBlurb" Opacity="0.7" TextWrapping="Wrap"
+                                       Text="This module is on the web IA; desktop depth lands in a later slice."/>
+                        </StackPanel>
+                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
+                                BorderBrush="#D0D4DC" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Honest empty — use Projects / Focus / Clients / Tasks / Ask ESTI for live desktop work."
+                                           Opacity="0.75" TextWrapping="Wrap"/>
+                                <Button Content="Back to Projects" Click="NavProjects_Click" MinHeight="44"
+                                        HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+
+            <!-- RIGHT SLOT · Ask ESTI -->
+            <Border x:Name="RightSlotPanel" Grid.Column="1" Background="#ECEEF2"
+                    BorderBrush="#D0D4DC" BorderThickness="1,0,0,0" Padding="16" Visibility="Collapsed">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Ask ESTI" FontSize="18" FontWeight="SemiBold" Foreground="#141517"/>
+                    <TextBlock Text="Local Ollama only · transcripts never sync."
+                               Opacity="0.65" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBox x:Name="EstiPromptBox" Header="Question"
+                             PlaceholderText="What should we do next?"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Ask" Click="AskEsti_Click" MinHeight="44" MinWidth="88"
+                                Background="#FF4F18" Foreground="White"/>
+                        <Button Content="Probe" Click="ProbeOllama_Click" MinHeight="44"/>
+                        <Button Content="Close" Click="ToggleRightSlot_Click" MinHeight="44"/>
+                    </StackPanel>
+                    <TextBlock x:Name="EstiReplyText" TextWrapping="Wrap" FontSize="13"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button x:Name="DockCreateBtn" Content="Save local" Click="DockCreate_Click"
+            </Border>
+        </Grid>
+
+        <!-- FLOATING OVERLAYS (dock + taskbar + clock) -->
+        <Grid Grid.RowSpan="2" IsHitTestVisible="True">
+            <!-- ActionDock floating -->
+            <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                    Margin="16,0,16,92" MaxWidth="960" MinWidth="480"
+                    Background="#ECEEF2" CornerRadius="8" Padding="12,8"
+                    BorderBrush="#D0D4DC" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Content="Clear" Click="ClearForm_Click" MinHeight="44" MinWidth="72"/>
+                        <Button x:Name="DockImportBtn" Content="Import" Click="ImportCatalog_Click"
+                                MinHeight="44" Visibility="Collapsed"/>
+                    </StackPanel>
+                    <Button x:Name="DockCreateBtn" Grid.Column="1" Content="Save" Click="DockCreate_Click"
                             MinHeight="44" MinWidth="120"/>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
-                            HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button x:Name="DockReloadBtn" Content="Reload" Click="DockReload_Click" MinHeight="44"/>
-                    <Button x:Name="DockCommitBtn" Content="Publish to hub" Click="DockCommit_Click"
-                            Background="#FF4F18" Foreground="White" MinHeight="44" MinWidth="140"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Right">
+                        <Button Content="Reload" Click="DockReload_Click" MinHeight="44"/>
+                        <Button x:Name="DockCommitBtn" Content="Publish" Click="DockCommit_Click"
+                                Background="#FF4F18" Foreground="White" MinHeight="44" MinWidth="120"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-        <Border Grid.Row="3" Background="#ECEEF2" Padding="16,8" BorderBrush="#D0D4DC" BorderThickness="0,1,0,0">
-            <StackPanel Spacing="6">
-                <TextBlock x:Name="TrayText" Text="AStudio · S2c Portfolio"
-                           FontSize="11" Opacity="0.55"/>
-                <TextBlock x:Name="HubStatusText" TextWrapping="Wrap" FontSize="12"/>
-                <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap"
-                           FontFamily="Consolas" FontSize="11"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBox x:Name="LicenseKeyBox" Width="280"
-                             PlaceholderText="License key (HLP-…)" Header="Activate"/>
-                    <Button Content="Activate" Click="Activate_Click" VerticalAlignment="Bottom"/>
-                    <Button Content="Flush meta" Click="Flush_Click" VerticalAlignment="Bottom"/>
-                    <Button Content="Refresh" Click="Refresh_Click" VerticalAlignment="Bottom"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
+            <!-- Taskbar floating -->
+            <Border VerticalAlignment="Bottom" Margin="16,0,16,16" Height="60"
+                    Background="#ECEEF2" CornerRadius="8" Padding="12,0"
+                    BorderBrush="#D0D4DC" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- LEFT tools -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Button Content="Calc" Click="CalcStub_Click" MinHeight="35" MinWidth="48" Padding="8,4"/>
+                        <Button Content="Home" Click="NavHome_Click" MinHeight="35" MinWidth="48" Padding="8,4"/>
+                    </StackPanel>
+                    <!-- CENTER module nav -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button x:Name="NavProjectsBtn" Content="Projects" Click="NavProjects_Click" MinHeight="35" Padding="10,4"/>
+                        <Button x:Name="NavClientsBtn" Content="Clients" Click="NavClients_Click" MinHeight="35" Padding="10,4"/>
+                        <Button x:Name="NavPeopleBtn" Content="People" Click="NavPeople_Click" MinHeight="35" Padding="10,4">
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="PeopleFlyout"/>
+                            </Button.Flyout>
+                        </Button>
+                        <Button x:Name="NavOfficeBtn" Content="Office" Click="NavOffice_Click" MinHeight="35" Padding="10,4">
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="OfficeFlyout"/>
+                            </Button.Flyout>
+                        </Button>
+                        <Button x:Name="NavFinanceBtn" Content="Finance" Click="NavFinance_Click" MinHeight="35" Padding="10,4">
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="FinanceFlyout"/>
+                            </Button.Flyout>
+                        </Button>
+                        <Button x:Name="NavAdminBtn" Content="Admin" Click="NavAdmin_Click" MinHeight="35" Padding="10,4">
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="AdminFlyout"/>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                    <!-- RIGHT tray -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock x:Name="TrayText" Text="Ready" FontSize="11" Opacity="0.55"
+                                   VerticalAlignment="Center" MaxWidth="120" TextTrimming="CharacterEllipsis"/>
+                        <Button Content="Sync" Click="Flush_Click" MinHeight="35" Padding="10,4"/>
+                        <Button Content="Activate" Click="ShowActivateFlyout_Click" MinHeight="35" Padding="10,4">
+                            <Button.Flyout>
+                                <Flyout>
+                                    <StackPanel Spacing="8" Width="300" Padding="4">
+                                        <TextBlock x:Name="HubStatusText" TextWrapping="Wrap" FontSize="11"/>
+                                        <TextBox x:Name="LicenseKeyBox" PlaceholderText="License key (HLP-…)"/>
+                                        <Button Content="Activate licence" Click="Activate_Click" MinHeight="40"/>
+                                        <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap"
+                                                   FontFamily="Consolas" FontSize="10"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Analogue clock BR -->
+            <Border x:Name="ClockFace" Width="100" Height="100" CornerRadius="50"
+                    Background="#FFFFFF" BorderBrush="#D0D4DC" BorderThickness="2"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                    Margin="0,0,16,92" IsHitTestVisible="False">
+                <Canvas Width="100" Height="100">
+                    <Line x:Name="ClockHour" X1="50" Y1="50" X2="50" Y2="28"
+                          Stroke="#141517" StrokeThickness="3" StrokeLineJoin="Round"/>
+                    <Line x:Name="ClockMinute" X1="50" Y1="50" X2="50" Y2="18"
+                          Stroke="#141517" StrokeThickness="2"/>
+                    <Line x:Name="ClockSecond" X1="50" Y1="50" X2="50" Y2="14"
+                          Stroke="#FF4F18" StrokeThickness="1"/>
+                    <Ellipse Canvas.Left="46" Canvas.Top="46" Width="8" Height="8"
+                             Fill="#FF4F18"/>
+                </Canvas>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

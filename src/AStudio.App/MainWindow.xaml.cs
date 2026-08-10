@@ -3,16 +3,11 @@ using Aorms.Bridge;
 using AStudio.App.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 
 namespace AStudio.App;
-
-enum ShellModule
-{
-    Focus,
-    Portfolio,
-    Practice,
-    Tasks,
-}
 
 enum FocusDomain
 {
@@ -29,15 +24,19 @@ public sealed partial class MainWindow : Window
     readonly LocalFeesStore _fees;
     readonly LocalDrawingsStore _drawings;
     readonly LocalDeliveryStore _delivery;
+    readonly LocalClientsStore _clients;
     readonly EstiOllamaClient _esti;
-    ShellModule _module = ShellModule.Portfolio;
+    readonly DispatcherTimer _clockTimer;
+    StageId _stage = StageId.Home;
     FocusDomain _focusDomain = FocusDomain.Brief;
     bool _estiBusy;
+    bool _rightSlotOpen;
     string? _focusProjectId;
     string? _selectedProjectId;
     string? _selectedFeeId;
     string? _selectedDrawingId;
     string? _selectedDeliveryId;
+    string? _selectedClientId;
 
     public MainWindow()
     {
@@ -51,8 +50,14 @@ public sealed partial class MainWindow : Window
             _fees = new LocalFeesStore(dbPath);
             _drawings = new LocalDrawingsStore(dbPath);
             _delivery = new LocalDeliveryStore(dbPath);
+            _clients = new LocalClientsStore(dbPath);
             _esti = new EstiOllamaClient();
-            ShowModule(ShellModule.Portfolio);
+            WireNavFlyouts();
+            _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _clockTimer.Tick += (_, _) => TickClock();
+            _clockTimer.Start();
+            TickClock();
+            ShowStage(StageId.Home);
             RefreshStatus("Ready.");
             _ = ProbeOllamaQuietAsync();
         }
@@ -78,40 +83,146 @@ public sealed partial class MainWindow : Window
         catch { /* best-effort */ }
     }
 
-    void ShowModule(ShellModule module)
+    void WireNavFlyouts()
     {
-        _module = module;
-        PanelFocus.Visibility = module == ShellModule.Focus ? Visibility.Visible : Visibility.Collapsed;
-        PanelPortfolio.Visibility = module == ShellModule.Portfolio ? Visibility.Visible : Visibility.Collapsed;
-        PanelPractice.Visibility = module == ShellModule.Practice ? Visibility.Visible : Visibility.Collapsed;
-        PanelTasks.Visibility = module == ShellModule.Tasks ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var item in StudioNav.PeopleItems)
+            PeopleFlyout.Items.Add(MakeNavItem(item.Id, item.Label, item.Blurb, PeopleMenu_Click));
+        foreach (var item in StudioNav.OfficeItems)
+            OfficeFlyout.Items.Add(MakeNavItem(item.Id, item.Label, item.Blurb, OfficeMenu_Click));
+        foreach (var item in StudioNav.FinanceItems)
+            FinanceFlyout.Items.Add(MakeNavItem(item.Id, item.Label, item.Blurb, FinanceMenu_Click));
+        foreach (var item in StudioNav.AdminItems)
+            AdminFlyout.Items.Add(MakeNavItem(item.Id, item.Label, item.Blurb, AdminMenu_Click));
+    }
 
-        StyleNav(NavFocusBtn, module == ShellModule.Focus);
-        StyleNav(NavPortfolioBtn, module == ShellModule.Portfolio);
-        StyleNav(NavPracticeBtn, module == ShellModule.Practice);
-        StyleNav(NavTasksBtn, module == ShellModule.Tasks);
+    static MenuFlyoutItem MakeNavItem(string id, string label, string blurb, RoutedEventHandler handler)
+    {
+        var mi = new MenuFlyoutItem { Text = label, Tag = $"{id}\n{label}\n{blurb}" };
+        mi.Click += handler;
+        return mi;
+    }
 
-        // Portfolio dock shows Import (≤5 total: Clear · Import · Save · Reload · Publish).
-        DockImportBtn.Visibility = module == ShellModule.Portfolio
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+    static bool TryNavTag(object sender, out string id, out string label, out string blurb)
+    {
+        id = label = blurb = "";
+        if (sender is not MenuFlyoutItem { Tag: string tag }) return false;
+        var parts = tag.Split('\n');
+        if (parts.Length < 3) return false;
+        id = parts[0];
+        label = parts[1];
+        blurb = parts[2];
+        return true;
+    }
+
+    void PeopleMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryNavTag(sender, out var id, out var label, out var blurb)) return;
+        if (id == "work") ShowStage(StageId.Tasks);
+        else ShowStage(StageId.Stub, label, blurb);
+    }
+
+    void OfficeMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryNavTag(sender, out var id, out var label, out var blurb)) return;
+        if (id == "proposals")
+        {
+            ShowStage(StageId.ProjectFocus);
+            ShowFocusDomain(FocusDomain.Fees);
+            return;
+        }
+        ShowStage(StageId.Stub, label, blurb);
+    }
+
+    void FinanceMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryNavTag(sender, out var id, out var label, out var blurb)) return;
+        if (id == "invoices")
+        {
+            ShowStage(StageId.ProjectFocus);
+            ShowFocusDomain(FocusDomain.Fees);
+            return;
+        }
+        ShowStage(StageId.Stub, label, blurb);
+    }
+
+    void AdminMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryNavTag(sender, out var id, out var label, out var blurb)) return;
+        if (id == "connection")
+        {
+            ShowStage(StageId.Home);
+            TrayText.Text = "Use Sync / Activate on the taskbar.";
+            return;
+        }
+        ShowStage(StageId.Stub, label, blurb);
+    }
+
+    void TickClock()
+    {
+        var now = DateTime.Now;
+        var cx = 50.0;
+        var cy = 50.0;
+        SetHand(ClockHour, cx, cy, (now.Hour % 12 + now.Minute / 60.0) * 30.0, 22);
+        SetHand(ClockMinute, cx, cy, now.Minute * 6.0, 32);
+        SetHand(ClockSecond, cx, cy, now.Second * 6.0, 36);
+    }
+
+    static void SetHand(Microsoft.UI.Xaml.Shapes.Line line, double cx, double cy, double degrees, double length)
+    {
+        var rad = (degrees - 90) * Math.PI / 180.0;
+        line.X1 = cx;
+        line.Y1 = cy;
+        line.X2 = cx + Math.Cos(rad) * length;
+        line.Y2 = cy + Math.Sin(rad) * length;
+    }
+
+    void ShowStage(StageId stage, string? stubTitle = null, string? stubBlurb = null)
+    {
+        _stage = stage;
+        PanelHome.Visibility = stage == StageId.Home ? Visibility.Visible : Visibility.Collapsed;
+        PanelProjects.Visibility = stage == StageId.Projects ? Visibility.Visible : Visibility.Collapsed;
+        PanelFocus.Visibility = stage == StageId.ProjectFocus ? Visibility.Visible : Visibility.Collapsed;
+        PanelClients.Visibility = stage == StageId.Clients ? Visibility.Visible : Visibility.Collapsed;
+        PanelTasks.Visibility = stage == StageId.Tasks ? Visibility.Visible : Visibility.Collapsed;
+        PanelStub.Visibility = stage == StageId.Stub ? Visibility.Visible : Visibility.Collapsed;
+
+        StyleNav(NavProjectsBtn, stage is StageId.Projects or StageId.ProjectFocus);
+        StyleNav(NavClientsBtn, stage == StageId.Clients);
+        // Menus stay inactive unless their stub/work is showing — leave unstyled for flyouts
+        StyleNav(NavPeopleBtn, stage == StageId.Tasks);
+        StyleNav(NavOfficeBtn, false);
+        StyleNav(NavFinanceBtn, stage == StageId.ProjectFocus && _focusDomain == FocusDomain.Fees);
+        StyleNav(NavAdminBtn, false);
+
+        DockImportBtn.Visibility = stage == StageId.Projects ? Visibility.Visible : Visibility.Collapsed;
+
+        if (stage == StageId.Stub)
+        {
+            StubTitle.Text = stubTitle ?? "Coming on desktop";
+            StubBlurb.Text = stubBlurb ?? "This module is on the web IA; desktop depth lands later.";
+        }
 
         ApplyDockLabels();
-        TrayText.Text = $"AStudio · {_module}";
+        TrayText.Text = stage == StageId.Stub
+            ? $"AStudio · {stubTitle}"
+            : $"AStudio · {stage}";
 
-        switch (module)
+        switch (stage)
         {
-            case ShellModule.Portfolio:
-                ReloadProjects();
-                break;
-            case ShellModule.Focus:
-                LoadFocusForm();
-                break;
-            case ShellModule.Practice:
-                RefreshStatus();
+            case StageId.Home:
+                LoadHome();
                 _ = ProbeOllamaQuietAsync();
                 break;
-            case ShellModule.Tasks:
+            case StageId.Projects:
+                ReloadProjects();
+                break;
+            case StageId.ProjectFocus:
+                LoadFocusForm();
+                break;
+            case StageId.Clients:
+                ReloadClients();
+                break;
+            case StageId.Tasks:
                 if (!string.IsNullOrEmpty(_focusProjectId) &&
                     string.IsNullOrWhiteSpace(TaskProjectBox.Text))
                     TaskProjectBox.Text = _focusProjectId;
@@ -124,7 +235,7 @@ public sealed partial class MainWindow : Window
 
     void ApplyDockLabels()
     {
-        if (_module == ShellModule.Focus)
+        if (_stage == StageId.ProjectFocus)
         {
             DockCreateBtn.Content = _focusDomain switch
             {
@@ -143,34 +254,41 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        DockCreateBtn.Content = _module switch
+        DockCreateBtn.Content = _stage switch
         {
-            ShellModule.Portfolio => "Save project",
-            ShellModule.Practice => "Probe Ollama",
-            ShellModule.Tasks => "Save local",
-            _ => "Save local",
+            StageId.Projects => "Save project",
+            StageId.Clients => "Save client",
+            StageId.Home => "Probe Ollama",
+            StageId.Tasks => "Save local",
+            _ => "Save",
         };
-        DockCommitBtn.Content = _module switch
+        DockCommitBtn.Content = _stage switch
         {
-            ShellModule.Portfolio => "Publish status",
-            ShellModule.Practice => "Flush meta",
-            _ => "Publish to hub",
+            StageId.Projects or StageId.ProjectFocus => "Publish status",
+            StageId.Clients => "Publish client",
+            StageId.Home => "Flush meta",
+            StageId.Tasks => "Publish to hub",
+            _ => "Publish",
         };
     }
 
     void UpdateDockEnabled()
     {
         var hasFocusProject = ResolveFocusProjectId() is not null;
-        switch (_module)
+        switch (_stage)
         {
-            case ShellModule.Focus:
+            case StageId.ProjectFocus:
                 DockCreateBtn.IsEnabled = hasFocusProject;
                 DockCommitBtn.IsEnabled = hasFocusProject;
                 break;
-            case ShellModule.Portfolio:
+            case StageId.Projects:
                 DockCreateBtn.IsEnabled = true;
                 DockCommitBtn.IsEnabled = hasFocusProject || _selectedProjectId is not null
                     || _projects.List().Count > 0;
+                break;
+            case StageId.Stub:
+                DockCreateBtn.IsEnabled = false;
+                DockCommitBtn.IsEnabled = false;
                 break;
             default:
                 DockCreateBtn.IsEnabled = true;
@@ -183,28 +301,72 @@ public sealed partial class MainWindow : Window
 
     static void StyleNav(Button btn, bool active)
     {
-        // Theme styles are not always in Application.Current.Resources (unpackaged WinUI).
-        // Use ink/accent paints instead of AccentButtonStyle / SubtleButtonStyle lookups.
         if (active)
         {
-            btn.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                Windows.UI.Color.FromArgb(255, 0xFF, 0x4F, 0x18));
-            btn.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                Windows.UI.Color.FromArgb(255, 255, 255, 255));
+            btn.Background = new SolidColorBrush(Color.FromArgb(255, 0xFF, 0x4F, 0x18));
+            btn.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
         }
         else
         {
-            btn.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                Windows.UI.Color.FromArgb(0, 0, 0, 0));
-            btn.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                Windows.UI.Color.FromArgb(255, 0x14, 0x15, 0x17));
+            btn.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+            btn.Foreground = new SolidColorBrush(Color.FromArgb(255, 0x14, 0x15, 0x17));
         }
     }
 
-    void NavFocus_Click(object sender, RoutedEventArgs e) => ShowModule(ShellModule.Focus);
-    void NavPortfolio_Click(object sender, RoutedEventArgs e) => ShowModule(ShellModule.Portfolio);
-    void NavPractice_Click(object sender, RoutedEventArgs e) => ShowModule(ShellModule.Practice);
-    void NavTasks_Click(object sender, RoutedEventArgs e) => ShowModule(ShellModule.Tasks);
+    void NavHome_Click(object sender, RoutedEventArgs e) => ShowStage(StageId.Home);
+    void NavProjects_Click(object sender, RoutedEventArgs e) => ShowStage(StageId.Projects);
+    void NavClients_Click(object sender, RoutedEventArgs e) => ShowStage(StageId.Clients);
+    void NavPeople_Click(object sender, RoutedEventArgs e) => NavPeopleBtn.Flyout?.ShowAt(NavPeopleBtn);
+    void NavOffice_Click(object sender, RoutedEventArgs e) => NavOfficeBtn.Flyout?.ShowAt(NavOfficeBtn);
+    void NavFinance_Click(object sender, RoutedEventArgs e) => NavFinanceBtn.Flyout?.ShowAt(NavFinanceBtn);
+    void NavAdmin_Click(object sender, RoutedEventArgs e) => NavAdminBtn.Flyout?.ShowAt(NavAdminBtn);
+
+    void ToggleRightSlot_Click(object sender, RoutedEventArgs e)
+    {
+        _rightSlotOpen = !_rightSlotOpen;
+        RightSlotCol.Width = _rightSlotOpen ? new GridLength(320) : new GridLength(0);
+        RightSlotPanel.Visibility = _rightSlotOpen ? Visibility.Visible : Visibility.Collapsed;
+        if (_rightSlotOpen) _ = ProbeOllamaQuietAsync();
+    }
+
+    void AccountStub_Click(object sender, RoutedEventArgs e) =>
+        ShowStage(StageId.Stub, "Account", "Account / identity hub — desktop slice later. Activate licence from taskbar.");
+
+    void CalcStub_Click(object sender, RoutedEventArgs e) =>
+        ShowStage(StageId.Stub, "Calculator", "Quick calc — desktop slice later.");
+
+    void ShowActivateFlyout_Click(object sender, RoutedEventArgs e) { /* Flyout opens via XAML */ }
+
+    void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != Windows.System.VirtualKey.Enter) return;
+        var q = SearchBox.Text?.Trim().ToLowerInvariant() ?? "";
+        if (string.IsNullOrEmpty(q)) return;
+        if (q.Contains("project")) ShowStage(StageId.Projects);
+        else if (q.Contains("client")) ShowStage(StageId.Clients);
+        else if (q.Contains("task") || q.Contains("work")) ShowStage(StageId.Tasks);
+        else if (q.Contains("esti") || q.Contains("ask"))
+        {
+            if (!_rightSlotOpen) ToggleRightSlot_Click(sender, e);
+        }
+        else if (q.Contains("home") || q.Contains("studio")) ShowStage(StageId.Home);
+        else ShowStage(StageId.Stub, "Search", $"No desktop match for “{SearchBox.Text}”. Try Projects, Clients, Tasks, Ask ESTI.");
+    }
+
+    void LoadHome()
+    {
+        var projects = _projects.List();
+        var clients = _clients.List();
+        var tasks = _bridge.Db.ListLocalTasks();
+        HomeCapacityText.Text =
+            $"projects={projects.Count}  clients={clients.Count}  tasks={tasks.Count}  " +
+            $"focus={ResolveFocusProjectId() ?? "—"}";
+        var cfg = _bridge.HubConfigured();
+        HomeHubText.Text =
+            $"syncReady={cfg.SyncReady}  hasSyncToken={cfg.HasSyncToken}  hub={cfg.HubUrl}";
+        HealthText.Text = projects.Count == 0 ? "Office · empty" : $"Office · {projects.Count} projects";
+        RefreshStatus();
+    }
 
     void RefreshStatus(string? note = null)
     {
@@ -568,7 +730,7 @@ public sealed partial class MainWindow : Window
     async Task PublishProjectStatusAsync()
     {
         // From Focus brief, persist edits before enqueue so hub gets current fields.
-        if (_module == ShellModule.Focus && _focusDomain == FocusDomain.Brief)
+        if (_stage == StageId.ProjectFocus && _focusDomain == FocusDomain.Brief)
         {
             if (!SaveFocusProject(quiet: true))
             {
@@ -615,8 +777,8 @@ public sealed partial class MainWindow : Window
                 LogText.Text = $"projectStatus OK · {p.ProjectId}";
             }
             // Stay on current module (do not yank to Practice).
-            if (_module == ShellModule.Portfolio) ReloadProjects();
-            if (_module == ShellModule.Focus) LoadFocusForm();
+            if (_stage == StageId.Projects) ReloadProjects();
+            if (_stage == StageId.ProjectFocus) LoadFocusForm();
         }
         catch (Exception ex)
         {
@@ -1054,7 +1216,7 @@ public sealed partial class MainWindow : Window
         }
         _focusProjectId = _selectedProjectId ?? rows[0].ProjectId;
         _selectedProjectId = _focusProjectId;
-        ShowModule(ShellModule.Focus);
+        ShowStage(StageId.ProjectFocus);
         TrayText.Text = $"Focus · {_focusProjectId}";
     }
 
@@ -1185,13 +1347,13 @@ public sealed partial class MainWindow : Window
         CatalogImportNote.Text = status;
         TrayText.Text = n == 0 ? "No new Connect projects." : $"Imported {n} Connect project(s).";
         LogText.Text = status;
-        if (_module != ShellModule.Portfolio)
-            ShowModule(ShellModule.Portfolio);
+        if (_stage != StageId.Projects)
+            ShowStage(StageId.Projects);
         // S2c polish: after first successful import with empty Focus, open the selected project.
         if (n > 0 && _focusProjectId is null && _selectedProjectId is not null)
         {
             _focusProjectId = _selectedProjectId;
-            ShowModule(ShellModule.Focus);
+            ShowStage(StageId.ProjectFocus);
             TrayText.Text = $"Imported {n} · Focus · {_focusProjectId}";
         }
     }
@@ -1252,14 +1414,14 @@ public sealed partial class MainWindow : Window
 
     void ClearForm_Click(object sender, RoutedEventArgs e)
     {
-        switch (_module)
+        switch (_stage)
         {
-            case ShellModule.Portfolio:
+            case StageId.Projects:
                 ProjectTitleBox.Text = "";
                 ProjectRefBox.Text = "";
                 ProjectPhaseBox.Text = "";
                 break;
-            case ShellModule.Focus:
+            case StageId.ProjectFocus:
                 switch (_focusDomain)
                 {
                     case FocusDomain.Fees:
@@ -1287,11 +1449,17 @@ public sealed partial class MainWindow : Window
                         break;
                 }
                 break;
-            case ShellModule.Practice:
+            case StageId.Home:
                 EstiPromptBox.Text = "";
                 EstiReplyText.Text = "";
                 break;
-            case ShellModule.Tasks:
+            case StageId.Clients:
+                ClientNameBox.Text = "";
+                ClientContactBox.Text = "";
+                ClientEmailBox.Text = "";
+                ClientNotesBox.Text = "";
+                break;
+            case StageId.Tasks:
                 TaskTitleBox.Text = "";
                 break;
         }
@@ -1300,12 +1468,12 @@ public sealed partial class MainWindow : Window
 
     void DockCreate_Click(object sender, RoutedEventArgs e)
     {
-        switch (_module)
+        switch (_stage)
         {
-            case ShellModule.Portfolio:
+            case StageId.Projects:
                 SavePortfolioProject();
                 break;
-            case ShellModule.Focus:
+            case StageId.ProjectFocus:
                 switch (_focusDomain)
                 {
                     case FocusDomain.Fees:
@@ -1322,10 +1490,13 @@ public sealed partial class MainWindow : Window
                         break;
                 }
                 break;
-            case ShellModule.Tasks:
+            case StageId.Clients:
+                SaveClient();
+                break;
+            case StageId.Tasks:
                 SaveTaskLocal();
                 break;
-            case ShellModule.Practice:
+            case StageId.Home:
                 ProbeOllama_Click(sender, e);
                 break;
         }
@@ -1333,37 +1504,44 @@ public sealed partial class MainWindow : Window
 
     void DockReload_Click(object sender, RoutedEventArgs e)
     {
-        switch (_module)
+        switch (_stage)
         {
-            case ShellModule.Portfolio:
+            case StageId.Projects:
                 ReloadProjects();
                 TrayText.Text = "Projects reloaded.";
                 break;
-            case ShellModule.Focus:
+            case StageId.ProjectFocus:
                 if (_focusDomain == FocusDomain.Brief)
                     LoadFocusForm();
                 else
                     ShowFocusDomain(_focusDomain);
                 TrayText.Text = "Focus reloaded.";
                 break;
-            case ShellModule.Practice:
+            case StageId.Clients:
+                ReloadClients();
+                TrayText.Text = "Clients reloaded.";
+                break;
+            case StageId.Home:
+                LoadHome();
                 RefreshStatus("Status refreshed.");
                 break;
-            case ShellModule.Tasks:
+            case StageId.Tasks:
                 ReloadTasks();
                 TrayText.Text = "Tasks reloaded.";
+                break;
+            case StageId.Stub:
                 break;
         }
     }
 
     async void DockCommit_Click(object sender, RoutedEventArgs e)
     {
-        switch (_module)
+        switch (_stage)
         {
-            case ShellModule.Portfolio:
+            case StageId.Projects:
                 await PublishProjectStatusAsync();
                 break;
-            case ShellModule.Focus:
+            case StageId.ProjectFocus:
                 switch (_focusDomain)
                 {
                     case FocusDomain.Fees:
@@ -1380,12 +1558,111 @@ public sealed partial class MainWindow : Window
                         break;
                 }
                 break;
-            case ShellModule.Practice:
+            case StageId.Clients:
+                await PublishClientAsync();
+                break;
+            case StageId.Home:
                 Flush_Click(sender, e);
                 break;
-            case ShellModule.Tasks:
+            case StageId.Tasks:
                 await PublishTaskAsync();
                 break;
         }
     }
+
+    void ReloadClients()
+    {
+        var rows = _clients.List();
+        ClientListText.Text = rows.Count == 0
+            ? "(empty — save a client)"
+            : string.Join("\n", rows.Select(r =>
+            {
+                var mark = r.ClientId == _selectedClientId ? ">" : " ";
+                return $"{mark} {r.PublishState}  {r.Name}  ·  {r.Contact}  [{r.ClientId}]";
+            }));
+        if (_selectedClientId is null && rows.Count > 0)
+            _selectedClientId = rows[0].ClientId;
+    }
+
+    void SaveClient()
+    {
+        var name = ClientNameBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(name))
+        {
+            TrayText.Text = "Client name required.";
+            return;
+        }
+        var id = Guid.NewGuid().ToString("N")[..12];
+        _clients.Upsert(
+            id,
+            name,
+            ClientContactBox.Text?.Trim() ?? "",
+            ClientEmailBox.Text?.Trim() ?? "",
+            ClientNotesBox.Text ?? "",
+            "LOCAL");
+        _selectedClientId = id;
+        ClientNameBox.Text = "";
+        ClientContactBox.Text = "";
+        ClientEmailBox.Text = "";
+        ClientNotesBox.Text = "";
+        ReloadClients();
+        TrayText.Text = $"Saved client {id}";
+    }
+
+    async Task PublishClientAsync()
+    {
+        LocalClient? row = null;
+        var name = ClientNameBox.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(name))
+        {
+            var id = Guid.NewGuid().ToString("N")[..12];
+            _clients.Upsert(id, name, ClientContactBox.Text?.Trim() ?? "",
+                ClientEmailBox.Text?.Trim() ?? "", ClientNotesBox.Text ?? "", "LOCAL");
+            _selectedClientId = id;
+            ClientNameBox.Text = "";
+            ClientContactBox.Text = "";
+            ClientEmailBox.Text = "";
+            ClientNotesBox.Text = "";
+            row = _clients.Get(id);
+        }
+        else if (_selectedClientId is not null)
+            row = _clients.Get(_selectedClientId);
+        else
+            row = _clients.List().FirstOrDefault();
+
+        if (row is null)
+        {
+            TrayText.Text = "Save a client first.";
+            return;
+        }
+        try
+        {
+            _bridge.EnqueueMeta("clientStatus", row.ClientId, new Dictionary<string, object?>
+            {
+                ["clientId"] = row.ClientId,
+                ["name"] = row.Name,
+                ["contact"] = row.Contact,
+                ["email"] = row.Email,
+                ["updatedAt"] = DateTime.UtcNow.ToString("O"),
+            });
+            _clients.Upsert(row.ClientId, row.Name, row.Contact, row.Email, row.Notes, "QUEUED");
+            var result = await _bridge.FlushAsync();
+            if (result.SkippedReason is not null)
+            {
+                TrayText.Text = $"Queued clientStatus; flush skipped={result.SkippedReason}";
+                LogText.Text = $"Flush skipped={result.SkippedReason}";
+            }
+            else
+            {
+                _clients.Upsert(row.ClientId, row.Name, row.Contact, row.Email, row.Notes, "PUBLISHED");
+                TrayText.Text = $"Published client · {row.Name} · metaSent={result.MetaSent}";
+            }
+            ReloadClients();
+        }
+        catch (Exception ex)
+        {
+            TrayText.Text = $"Publish failed: {ex.Message}";
+        }
+    }
 }
+

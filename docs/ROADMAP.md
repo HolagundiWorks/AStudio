@@ -1,6 +1,6 @@
 # AStudio desktop roadmap
 
-**Current wave:** S4 — Local ESTI  
+**Current wave:** S5a — Web chrome parity  
 **Updated:** 2026-08-10  
 Upstream tracker: esti [ROADMAP.md](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/ROADMAP.md) D-waves.  
 Open source until SaaS licensing is decided.
@@ -13,8 +13,9 @@ Open source until SaaS licensing is decided.
 | S1 | SQLite + Aorms.Bridge (shared with AQC spike) | **Done** — firm.db · BridgeHost · Activate/Flush · Connect session import |
 | S2 | Shell fork: project · estimate · BBS via engine | **Done** — S2a–S2e |
 | S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — S3a–S3e (artifact ingest envelope) |
-| S4 | Local AI (ESTI) · publish path smoke to hub portal | **Done** — Practice Ask ESTI · Ollama probe/chat · Flush stays on tray |
-| S5 | Signed installer · downloads CTA on studio.aorms.in | Not started (MSIX = D6) |
+| S4 | Local AI (ESTI) · publish path smoke to hub portal | **Done** |
+| S5a | Web chrome parity (ribbon · dock · taskbar · studioNav) | **Done** |
+| S5b | Signed installer · downloads CTA | Not started (MSIX = D6) |
 
 ## S3 checklist
 

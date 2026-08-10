@@ -1,40 +1,40 @@
 # AStudio WinUI shell (D5 + HCW geography)
 
-**Status:** Unpackaged WinUI 3 shell · **Updated:** 2026-08-10 · wave **S4** ✅  
-**Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md)
+**Status:** Unpackaged WinUI 3 · **Updated:** 2026-08-10 · **S5a web chrome parity** ✅  
+**Parity:** esti [`DESKTOP-WEB-PARITY-UX.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/DESKTOP-WEB-PARITY-UX.md) · [`NAVIGATION.md`](https://github.com/HolagundiWorks/aorms/blob/main/docs/esti/NAVIGATION.md)
 
-## Chrome (HCW scaffold)
+## Chrome (match web staff)
 
 ```text
-┌─ Ribbon (Focus · Portfolio · Practice · Tasks) ─────────────┐
-├─ Stage (Fog Gray) — module panels ──────────────────────────┤
-├─ ActionDock — Clear · [Import] · Save · Reload · Publish ───┤
-└─ Status tray ───────────────────────────────────────────────┘
+┌─ Top ribbon 56px — brand · search · health · Local AI · Ask ESTI ─┐
+├─ Stage (Fog) + optional right slot (Ask ESTI) ────────────────────┤
+│              ╭─ floating ActionDock (≤5) ─╮                       │
+├─ floating Taskbar 60px — Calc|Home | Projects·Clients·People·… ──┤
+└─ AnalogueClock 100px BR (clears dock) ────────────────────────────┘
 ```
 
-- Canvas `#F2F4F7` · soft chrome `#ECEEF2` · ink `#141517` · accent `#FF4F18` · **8px** radius  
-- Dock zones: destroy LEFT · create CENTRE · commit RIGHT  
-- Dock ≤5 actions; **one** orange commit  
-- Local AI badge on ribbon — ESTI does **not** run on the hub  
+| Region | Contents |
+| --- | --- |
+| **Top ribbon** | Brand → Home · search · office health · Local AI badge · Account stub · Ask ESTI |
+| **Stage** | Home · Projects · Project Focus · Clients · Tasks · Stub |
+| **ActionDock** | Clear · [Import] · Save · Reload · Publish (orange) — floating above taskbar |
+| **Taskbar CENTER** | Projects · Clients · People · Office · Finance · Admin (web `studioNav`) |
+| **Taskbar RIGHT** | Tray · Sync · Activate flyout |
+| **Clock** | Analogue, fixed BR |
 
-| Ribbon | Stage | Dock Save | Dock Publish |
-| --- | --- | --- | --- |
-| Portfolio | Local projects · Import from Connect | Save project | Publish status |
-| Focus | Brief · Fees · Drawings · Delivery | per tab | per tab meta |
-| Practice | **Ask ESTI** (Ollama) · hub notes | Probe Ollama | Flush meta |
-| Tasks | Local tasks · ops publish | Save local | Publish to hub |
+**Module nav is not in the top ribbon** (web law).
 
-### S4 — Ask ESTI (2026-08-10)
+### Live vs stub
 
-- `EstiOllamaClient` → `GET /api/tags` · `POST /api/chat` on local Ollama.  
-- Practice stage: Ask ESTI + Probe; Focus project context injected.  
-- Transcripts **never** synced. Env: `ESTI_OLLAMA_URL` · `ESTI_OLLAMA_MODEL`.  
-- Ribbon badge shows `Local AI · {model}` when reachable.
-
-### S3 / S3e
-
-Focus domain tabs · paise fees · delivery items.  
-Drawings: register meta + **Queue artifact ingest** (`drawing` artifact · sha256 · Bridge flush; binary upload later).
+| Destination | Status |
+| --- | --- |
+| Home (Studio Intelligence) | Capacity + ESTI probe |
+| Projects / Focus (Brief·Fees·Drawings·Delivery) | Live local stores + meta/artifact |
+| Clients | Live `local_clients` |
+| Tasks | Live bridge tasks |
+| People › Work | → Tasks |
+| Office › Proposals / Finance › Invoices | → Focus Fees |
+| Other Office / People / Finance / Admin / Library | Honest stub stage |
 
 ## Build / run
 
@@ -43,7 +43,6 @@ build-engine.cmd
 build-winui.cmd
 set ESTI_HUB_URL=http://127.0.0.1:4000
 set ESTI_OLLAMA_URL=http://127.0.0.1:11434
-set ESTI_OLLAMA_MODEL=llama3.2
 ```
 
-firm.db: `%LocalAppData%\AStudio\firm.db` · MSIX = D6.
+firm.db: `%LocalAppData%\AStudio\firm.db` · MSIX = D6 (S5b).
