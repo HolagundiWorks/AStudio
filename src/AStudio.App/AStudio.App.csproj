@@ -43,4 +43,23 @@
   <ItemGroup>
     <ProjectReference Include="..\..\vendor\AQC\BBSDesktop\Aorms.Bridge\Aorms.Bridge.csproj" />
   </ItemGroup>
+
+  <!-- S2d: copy pinned AQC bbs_engine.dll beside AStudio.exe when built (see build-engine.cmd). -->
+  <ItemGroup>
+    <Content Include="..\..\vendor\AQC\BBSDesktop\build\bbs_engine.dll"
+             Condition="Exists('..\..\vendor\AQC\BBSDesktop\build\bbs_engine.dll')">
+      <Link>bbs_engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="CopyEngineDll" AfterTargets="Build;Publish">
+    <PropertyGroup>
+      <_EngineDll>$(MSBuildThisFileDirectory)..\..\vendor\AQC\BBSDesktop\build\bbs_engine.dll</_EngineDll>
+      <_EngineDest Condition="'$(PublishDir)' != ''">$(PublishDir)</_EngineDest>
+      <_EngineDest Condition="'$(PublishDir)' == ''">$(OutputPath)</_EngineDest>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_EngineDll)" DestinationFolder="$(_EngineDest)" SkipUnchangedFiles="true"
+          Condition="Exists('$(_EngineDll)')" />
+  </Target>
 </Project>

@@ -113,12 +113,16 @@
                             <TextBlock x:Name="FocusMetaText" FontFamily="Consolas" FontSize="12"
                                        Opacity="0.7" TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Engine smoke (column)" Click="EngineSmoke_Click"
+                                        MinHeight="44"/>
                                 <Button Content="Open AQC Estimation" Click="OpenAqcEstimation_Click"
                                         MinHeight="44"/>
                                 <Button Content="Open AQC BBS" Click="OpenAqcBbs_Click"
                                         MinHeight="44"/>
                             </StackPanel>
-                            <TextBlock Text="Dock: Save focus · Publish status. Technical calc stays in AQC (S2e handoff). In-process bbs_engine P/Invoke = S2d later."
+                            <TextBlock x:Name="FocusEngineText" FontFamily="Consolas" FontSize="12"
+                                       Opacity="0.75" TextWrapping="Wrap"/>
+                            <TextBlock Text="Dock: Save focus · Publish status. S2d = in-process bbs_engine smoke; full BBS UI stays in AQC (S2e handoff)."
                                        Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>

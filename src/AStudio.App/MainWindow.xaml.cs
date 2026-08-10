@@ -243,6 +243,7 @@ public sealed partial class MainWindow : Window
             FocusPhaseBox.Text = "";
             FocusNotesBox.Text = "";
             FocusMetaText.Text = "";
+            FocusEngineText.Text = "";
             UpdateDockEnabled();
             return;
         }
@@ -271,6 +272,9 @@ public sealed partial class MainWindow : Window
         FocusNotesBox.Text = p.Notes;
         FocusMetaText.Text =
             $"id={p.ProjectId}  publish={p.PublishState}  ·  Save focus (dock) · Publish status (orange)";
+        FocusEngineText.Text = BbsEngineClient.DllPresent()
+            ? $"bbs_engine.dll ready · {BbsEngineClient.DllPath()}"
+            : "bbs_engine.dll missing — run build-engine.cmd then rebuild AStudio.";
         TaskProjectBox.Text = p.ProjectId;
         UpdateDockEnabled();
     }
@@ -400,6 +404,41 @@ public sealed partial class MainWindow : Window
         _selectedProjectId = _focusProjectId;
         ShowModule(ShellModule.Focus);
         TrayText.Text = $"Focus · {_focusProjectId}";
+    }
+
+    /// <summary>S2d — in-process bbs_engine P/Invoke smoke (sample column).</summary>
+    void EngineSmoke_Click(object sender, RoutedEventArgs e)
+    {
+        if (!BbsEngineClient.DllPresent())
+        {
+            var msg =
+                "bbs_engine.dll not beside AStudio.exe. Run build-engine.cmd (MSVC), then rebuild AStudio so the DLL copies to output.";
+            FocusEngineText.Text = msg;
+            TrayText.Text = "Engine DLL missing.";
+            LogText.Text = msg;
+            return;
+        }
+
+        try
+        {
+            var res = BbsEngineClient.SmokeColumn();
+            var summary = BbsEngineClient.FormatSmokeSummary(res);
+            FocusEngineText.Text = summary;
+            TrayText.Text = res.Ok ? "Engine smoke OK" : "Engine smoke failed";
+            LogText.Text = summary;
+        }
+        catch (DllNotFoundException ex)
+        {
+            FocusEngineText.Text = $"P/Invoke load failed: {ex.Message}";
+            TrayText.Text = "Engine load failed.";
+            LogText.Text = ex.ToString();
+        }
+        catch (Exception ex)
+        {
+            FocusEngineText.Text = $"Engine smoke exception: {ex.Message}";
+            TrayText.Text = "Engine smoke failed.";
+            LogText.Text = ex.ToString();
+        }
     }
 
     /// <summary>S2e — launch AQC Estimation (technical calc stays out of AStudio process).</summary>
