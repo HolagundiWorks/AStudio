@@ -60,7 +60,7 @@ public static class StudioNav
         ("ratebooks", "Library · Rate Books", "Rate books — desktop slice later."),
         ("compliance", "Library · Compliance", "Codes library — desktop slice later."),
         ("standards", "Library · Standards", "Standards — desktop slice later."),
-        ("connection", "Connection manager", "Hub Activate / Flush live in taskbar tray."),
+        ("connection", "Connection manager", "Activate in AORMS Connect; Flush live in taskbar tray."),
         ("archived", "Archived projects", "Archive browser — desktop slice later."),
     ];
 }

@@ -8,19 +8,22 @@ namespace AStudio.App.Services;
 /// <summary>
 /// Factory for the AORMS hub bridge (firm.db under LocalAppData\AStudio).
 /// Imports AORMS Connect session.json when present (C2 SSO).
+/// Hub bind settings: env → local-hub.json → loopback defaults.
 /// </summary>
 public static class AormsBridgeHost
 {
+    public static LocalHubConfig LastConfig { get; private set; } = new();
+
     public static AormsBridge CreateFromEnvironment()
     {
-        var deviceId = Environment.GetEnvironmentVariable("INSTALL_ID")
-            ?? $"astudio-{Environment.MachineName}".ToLowerInvariant();
+        var cfg = LocalHubConfig.Resolve();
+        LastConfig = cfg;
         var opt = new BridgeOptions
         {
-            LicenseApiUrl = Environment.GetEnvironmentVariable("ESTI_LICENSE_API_URL") ?? "",
-            HubUrl = Environment.GetEnvironmentVariable("ESTI_HUB_URL") ?? "http://127.0.0.1:4000",
-            ProductApiKey = Environment.GetEnvironmentVariable("ESTI_PRODUCT_API_KEY") ?? "",
-            DeviceId = deviceId,
+            LicenseApiUrl = cfg.LicenseApiUrl,
+            HubUrl = cfg.HubUrl,
+            ProductApiKey = cfg.ProductApiKey,
+            DeviceId = cfg.InstallId,
             DeviceName = "AStudio",
         };
         var dbPath = Path.Combine(

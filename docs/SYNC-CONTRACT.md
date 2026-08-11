@@ -11,7 +11,9 @@ via `Aorms.Bridge.Smoke` (`ESTI_LICENSE_KEY` path).
 
 ## Auth
 
-- `POST /platform/v1/activate` → `licenseToken` + **`syncToken`** (required)  
+- **Activate only in AORMS Connect** → writes `%LocalAppData%\AORMS-Connect\session.json`  
+- AStudio imports via `AormsBridge.TryImportConnectSession` (no HLP Activate UI in AStudio)  
+- Hub: `POST /platform/v1/activate` → `licenseToken` + **`syncToken`** (required)  
 - Sync calls: `Authorization: Bearer <syncToken>`
 
 ## Endpoints
@@ -35,13 +37,16 @@ drawingRegister · approvalState · projectStatus · presence
 
 AI transcripts (incl. Practice Ask ESTI / Ollama) · measurement scratch · nested estimate lines · drafts  
 
-## AStudio S3 usage
+## AStudio S3 + S6 Focus usage
 
 | Focus tab | Enqueued entity | Notes |
 | --- | --- | --- |
-| Brief | `projectStatus` | Portfolio / Focus |
-| Fees | `invoiceStatus` | `amountPaise` in patch |
+| Overview | `approvalState` · `presence` | Decisions → approvalState; critical notes → presence |
+| Brief | `projectStatus` | Incl. clientId · jurisdiction · site · workType · riskCount |
 | Drawings | `drawingRegister` meta · `drawing` artifact | S3e: JSON ingest + sha256; `fileKeys` empty until binary wave |
-| Delivery | `phaseProgress` | Snag / instruction / progress kinds |
+| Documents | `presence` (`kind=documentRegister`) | No dedicated meta entity yet — local `local_documents` |
+| Fees | `invoiceStatus` | `amountPaise` in patch |
+| Site | `phaseProgress` | Visits · snags · progress (`local_delivery.kind`) |
+| Tasks | `task` / `taskStatus` | Bridge ops publish |
 
 Bump this pin when esti HUB-API / bridge version bumps.

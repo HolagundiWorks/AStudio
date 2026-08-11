@@ -2,53 +2,96 @@
     x:Class="AStudio.App.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:AStudio.App.Models"
     Title="AStudio">
 
     <!--
-      HCW geography · web chrome parity:
+      HCW geography · web chrome parity (1× PORTAL_CHROME — no UiDensity scale):
       Top ribbon (brand/search/status) · Stage · floating ActionDock · floating Taskbar · Clock.
       Module nav lives in the taskbar (Projects · Clients · People · Office · Finance · Admin).
     -->
-    <Grid Background="#F2F4F7">
+    <Grid Background="{StaticResource HcwFogBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="56"/>
+            <!-- Floating soft ribbon (web AppRibbon inset Surface) — not flush edge bar -->
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP RIBBON — brand · search · health · Local AI · account (no module peers) -->
-        <Border Grid.Row="0" Background="#ECEEF2" Padding="16,0" BorderBrush="#D0D4DC" BorderThickness="0,0,0,1">
-            <Grid>
+        <!-- TOP RIBBON — NEU_RAISED · 56px face · 16px inset (web parity) -->
+        <Grid x:Name="RibbonChrome" Grid.Row="0" Height="56" Margin="16,16,16,8">
+            <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+            <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+            <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}">
+            <Grid Padding="16,0" Height="56">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Background="Transparent" BorderThickness="0" Click="NavHome_Click" Padding="0" MinHeight="44">
+                <Button Background="Transparent" BorderThickness="0" Click="NavHome_Click"
+                        Padding="4,0" Height="44" CornerRadius="8" VerticalAlignment="Center"
+                        ToolTipService.ToolTip="Studio Intelligence (Home)">
                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <Border Width="28" Height="28" CornerRadius="8" Background="#FF4F18">
-                            <TextBlock Text="A" Foreground="White" FontWeight="Bold"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel Spacing="0" VerticalAlignment="Center">
-                            <TextBlock Text="AStudio" FontSize="16" FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock Text="Accelerated Studio" FontSize="11" Opacity="0.55" Foreground="#141517"/>
-                        </StackPanel>
+                        <BitmapIcon UriSource="ms-appx:///Assets/aorms-mark.png"
+                                    Width="24" Height="24"
+                                    Foreground="{StaticResource HcwAccentBrush}"/>
+                        <TextBlock Text="AStudio" FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{StaticResource HcwInkBrush}"
+                                   FontFamily="{StaticResource HcwFontFamily}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <TextBox x:Name="SearchBox" Grid.Column="1" MaxWidth="360" HorizontalAlignment="Stretch"
-                         Margin="24,0" VerticalAlignment="Center" PlaceholderText="Search modules… (Enter)"
-                         KeyDown="SearchBox_KeyDown"/>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock x:Name="HealthText" Text="Office · calm" FontSize="12" Opacity="0.7"
-                               VerticalAlignment="Center"/>
-                    <TextBlock x:Name="LocalAiBadge" Text="Local AI · desktop" Opacity="0.55"
-                               VerticalAlignment="Center" FontSize="12"/>
-                    <Button Content="Account" Click="AccountStub_Click" MinHeight="35" Padding="12,4"/>
-                    <Button Content="Ask ESTI" Click="ToggleRightSlot_Click" MinHeight="35" Padding="12,4"
-                            Background="#FF4F18" Foreground="White"/>
+                <!-- Inset neu search — 35px -->
+                <Grid Grid.Column="1" MaxWidth="360" Height="35" Margin="24,0"
+                      VerticalAlignment="Center">
+                    <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="0,0,2,2"/>
+                    <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="2,2,0,0"/>
+                    <TextBox x:Name="SearchBox" Style="{StaticResource HcwNeuInput}"
+                             PlaceholderText="Search modules… (Enter)"
+                             KeyDown="SearchBox_KeyDown"/>
+                    <FontIcon Glyph="&#xE721;" FontSize="14" Margin="10,0,0,0"
+                              Foreground="{StaticResource HcwMutedBrush}"
+                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                              IsHitTestVisible="False"/>
+                </Grid>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Height="35">
+                        <FontIcon Glyph="&#xE95E;" FontSize="14" Foreground="{StaticResource HcwAccentBrush}"/>
+                        <TextBlock x:Name="HealthText" Text="Office · calm" Style="{StaticResource HcwLabel}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- Soft-neu Local AI chip 35px -->
+                    <Grid Height="35" VerticalAlignment="Center">
+                        <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="3,3,0,0"/>
+                        <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,3,3"/>
+                        <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="10,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE99A;" FontSize="14" Foreground="{StaticResource HcwAccentBrush}"/>
+                                <TextBlock x:Name="LocalAiBadge" Text="Local AI · desktop"
+                                           Style="{StaticResource HcwLabel}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <Button Style="{StaticResource HcwRibbonButton}" Click="AccountStub_Click"
+                            ToolTipService.ToolTip="Account">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE77B;" FontSize="14"/>
+                            <TextBlock Text="Account" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <!-- Ghost toggle — Radiant Orange reserved for Publish (web accent scarcity) -->
+                    <Button x:Name="AskEstiRibbonBtn" Style="{StaticResource HcwRibbonButton}"
+                            Click="ToggleRightSlot_Click"
+                            ToolTipService.ToolTip="Ask ESTI (local Ollama · right slot)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8F2;" FontSize="14"/>
+                            <TextBlock Text="Ask ESTI" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
-        </Border>
+            </Border>
+        </Grid>
 
         <!-- STAGE + right slot -->
         <Grid Grid.Row="1">
@@ -57,51 +100,107 @@
                 <ColumnDefinition x:Name="RightSlotCol" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Background="#F2F4F7" Padding="24,24,24,180">
-                <Grid MaxWidth="1200" HorizontalAlignment="Left">
+            <!-- Staff stage: full width + 24px gutters (PAGE-STRUCTURE) — not portal 1200px column -->
+            <ScrollViewer Background="{StaticResource HcwFogBrush}"
+                          Padding="24,24,24,180"
+                          HorizontalContentAlignment="Stretch"
+                          VerticalScrollBarVisibility="Auto">
+                <Grid HorizontalAlignment="Stretch">
 
-                    <!-- HOME · Studio Intelligence -->
-                    <StackPanel x:Name="PanelHome" Spacing="16" Visibility="Visible">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Studio Intelligence" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock Text="Practice home. Ask ESTI opens in the right slot (local Ollama). Deep KPIs later."
-                                       Opacity="0.7" TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Capacity" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="HomeCapacityText" FontFamily="Consolas" FontSize="12"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock x:Name="HomeHubText" FontFamily="Consolas" FontSize="12"
-                                           Opacity="0.75" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="ESTI · local" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="EstiStatusText" Opacity="0.75" TextWrapping="Wrap" FontSize="12"
-                                           Text="Probe Ollama from the right slot or dock."/>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Content="Open Ask ESTI" Click="ToggleRightSlot_Click" MinHeight="44"
-                                            Background="#FF4F18" Foreground="White"/>
-                                    <Button Content="Probe Ollama" Click="ProbeOllama_Click" MinHeight="44"/>
-                                    <Button Content="Go to Projects" Click="NavProjects_Click" MinHeight="44"/>
+                    <!-- HOME · Studio Intelligence (web brief + KPI strip peer) -->
+                    <StackPanel x:Name="PanelHome" Spacing="16" Visibility="Visible"
+                                HorizontalAlignment="Stretch">
+                        <!-- Soft brief strip — greeting + one attention line -->
+                        <Grid>
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+                            <Border Style="{StaticResource HcwSoftBrief}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Studio Intelligence" FontSize="22" FontWeight="SemiBold"
+                                               Foreground="{StaticResource HcwInkBrush}"
+                                               FontFamily="{StaticResource HcwFontFamily}"/>
+                                    <TextBlock x:Name="HomeBriefLine" Text="Practice home — capacity under load."
+                                               Opacity="0.75" TextWrapping="Wrap" FontSize="13"/>
+                                    <TextBlock x:Name="HomeHubText" Opacity="0.55" FontSize="12" TextWrapping="Wrap"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </Grid>
+                        <!-- KPI strip — one soft surface, hairline columns (not 4 bordered cards) -->
+                        <Grid>
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+                            <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="0">
+                                <Grid Height="88">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="4" Padding="20,16" VerticalAlignment="Center">
+                                        <TextBlock Text="Projects" Opacity="0.6" FontSize="12"/>
+                                        <TextBlock x:Name="HomeKpiProjects" Text="0" FontSize="32" FontWeight="Light"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </StackPanel>
+                                    <Rectangle Grid.Column="1" Width="1" Fill="{StaticResource HcwEdgeBrush}" Margin="0,16"/>
+                                    <StackPanel Grid.Column="2" Spacing="4" Padding="20,16" VerticalAlignment="Center">
+                                        <TextBlock Text="Clients" Opacity="0.6" FontSize="12"/>
+                                        <TextBlock x:Name="HomeKpiClients" Text="0" FontSize="32" FontWeight="Light"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </StackPanel>
+                                    <Rectangle Grid.Column="3" Width="1" Fill="{StaticResource HcwEdgeBrush}" Margin="0,16"/>
+                                    <StackPanel Grid.Column="4" Spacing="4" Padding="20,16" VerticalAlignment="Center">
+                                        <TextBlock Text="Open tasks" Opacity="0.6" FontSize="12"/>
+                                        <TextBlock x:Name="HomeKpiTasks" Text="0" FontSize="32" FontWeight="Light"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </StackPanel>
+                                    <Rectangle Grid.Column="5" Width="1" Fill="{StaticResource HcwEdgeBrush}" Margin="0,16"/>
+                                    <StackPanel Grid.Column="6" Spacing="4" Padding="20,16" VerticalAlignment="Center">
+                                        <TextBlock Text="Pending sync" Opacity="0.6" FontSize="12"/>
+                                        <TextBlock x:Name="HomeKpiSync" Text="0" FontSize="32" FontWeight="Light"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <!-- Attention flat on Fog (web open-loop list) -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Attention" FontWeight="SemiBold" FontSize="14"
+                                       Foreground="{StaticResource HcwInkBrush}"/>
+                            <ListView x:Name="HomeAttentionList" Style="{StaticResource HcwStageList}"
+                                      MaxHeight="180" SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:AttentionRow">
+                                        <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" Padding="0,6"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+                        <TextBlock x:Name="EstiStatusText" Opacity="0.65" TextWrapping="Wrap" FontSize="12"
+                                   Text="Ask ESTI · right slot · local Ollama. Sync status lives in the taskbar chip."/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Go to Projects" Click="NavProjects_Click" MinHeight="44"
+                                    Style="{StaticResource HcwDockButton}"/>
+                            <Button Content="Sync hub demo" Click="SyncHubDemo_Click" MinHeight="44"
+                                    Style="{StaticResource HcwDockButton}"
+                                    ToolTipService.ToolTip="Import esti_projectoffice demo into firm.db and Flush projectStatus"/>
+                        </StackPanel>
+                        <TextBlock x:Name="HomeCapacityText" Visibility="Collapsed"/>
                     </StackPanel>
 
-                    <!-- PROJECTS (was Portfolio) -->
-                    <StackPanel x:Name="PanelProjects" Spacing="16" Visibility="Collapsed">
+                    <!-- PROJECTS -->
+                    <StackPanel x:Name="PanelProjects" Spacing="16" Visibility="Collapsed"
+                                HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Projects" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock Text="Practice projects in firm.db. Open one for Focus (Brief · Fees · Drawings · Delivery)."
+                            <TextBlock Text="Projects" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
+                            <TextBlock Text="Practice projects in firm.db. Open Focus for Overview · Brief · Drawings · Documents · Fees · Site."
                                        Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
+                        <Border Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="AORMS Connect" FontWeight="SemiBold"/>
                                 <TextBlock Text="Pull projects from Connect’s shared catalog into this firm.db."
@@ -114,145 +213,526 @@
                                            Text="No import yet — run AORMS Connect, then Import from Connect."/>
                             </StackPanel>
                         </Border>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="New project" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ProjectTitleBox" Header="Title" PlaceholderText="Residence · Hospet"/>
-                                <TextBox x:Name="ProjectRefBox" Header="Ref" PlaceholderText="AST-2026-001"/>
-                                <TextBox x:Name="ProjectPhaseBox" Header="Phase" PlaceholderText="Concept / DD / Tender"/>
-                                <TextBlock Text="Local projects" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                                <TextBlock x:Name="ProjectListText" FontFamily="Consolas" FontSize="12"
-                                           TextWrapping="Wrap"/>
-                                <Button Content="Open selected in Focus" Click="OpenSelectedFocus_Click"
-                                        MinHeight="44" HorizontalAlignment="Left"/>
+                        <Border Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="220"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="8">
+                                        <TextBlock Text="New project" FontWeight="SemiBold"/>
+                                        <TextBox x:Name="ProjectTitleBox" Header="Title" PlaceholderText="Residence · Hospet"/>
+                                        <TextBox x:Name="ProjectRefBox" Header="Ref" PlaceholderText="AST-2026-001"/>
+                                        <TextBox x:Name="ProjectPhaseBox" Header="Phase" PlaceholderText="Concept / DD / Tender"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Bottom">
+                                        <TextBox x:Name="ProjectSearchBox" Header="Filter"
+                                                 PlaceholderText="Ref or title…"
+                                                 TextChanged="ProjectSearch_TextChanged"/>
+                                        <Button Content="Open in Focus" Click="OpenSelectedFocus_Click"
+                                                MinHeight="44" HorizontalAlignment="Stretch"
+                                                Style="{StaticResource HcwPrimaryButton}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid ColumnSpacing="8" Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="90"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Ref" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="Title" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                    <TextBlock Grid.Column="2" Text="Status" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                    <TextBlock Grid.Column="3" Text="Phase" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                    <TextBlock Grid.Column="4" Text="Publish" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                </Grid>
+                                <ListView x:Name="ProjectsListView" Style="{StaticResource HcwStageList}" MinHeight="220" MaxHeight="360"
+                                          SelectionMode="Single"
+                                          SelectionChanged="ProjectsList_SelectionChanged"
+                                          DoubleTapped="ProjectsList_DoubleTapped">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:ProjectRow">
+                                            <Grid ColumnSpacing="8" Padding="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{x:Bind Ref}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1" Text="{x:Bind Title}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="2" Text="{x:Bind Status}" Opacity="0.8"/>
+                                                <TextBlock Grid.Column="3" Text="{x:Bind Phase}" Opacity="0.8"/>
+                                                <TextBlock Grid.Column="4" Text="{x:Bind PublishState}" Opacity="0.75"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <TextBlock x:Name="ProjectListText" Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <!-- PROJECT FOCUS -->
-                    <StackPanel x:Name="PanelFocus" Spacing="16" Visibility="Collapsed">
+                    <StackPanel x:Name="PanelFocus" Spacing="16" Visibility="Collapsed"
+                                HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Project Focus" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock Text="Project Focus" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
                             <TextBlock x:Name="FocusSubtitle" Text="No project in focus."
                                        Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <Border x:Name="FocusEmptyPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
+                        <Border x:Name="FocusEmptyPanel" Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}" Visibility="Visible">
                             <StackPanel Spacing="10">
-                                <TextBlock Text="No project selected" FontWeight="SemiBold" Foreground="#141517"/>
+                                <TextBlock Text="No project selected" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
                                 <TextBlock x:Name="FocusEmptyCopy"
-                                           Text="Open Projects, pick a local project (or Import from Connect), then Open selected in Focus."
+                                           Text="Open Projects, pick a local project (or Import from Connect), then Open in Focus."
                                            Opacity="0.7" TextWrapping="Wrap"/>
                                 <Button Content="Go to Projects" Click="NavProjects_Click"
                                         MinHeight="44" MinWidth="140" HorizontalAlignment="Left"/>
                             </StackPanel>
                         </Border>
                         <StackPanel x:Name="FocusWorkPanel" Spacing="12" Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button x:Name="FocusTabBriefBtn" Content="Brief" Click="FocusTabBrief_Click"/>
-                                <Button x:Name="FocusTabFeesBtn" Content="Fees" Click="FocusTabFees_Click"/>
-                                <Button x:Name="FocusTabDrawingsBtn" Content="Drawings" Click="FocusTabDrawings_Click"/>
-                                <Button x:Name="FocusTabDeliveryBtn" Content="Delivery" Click="FocusTabDelivery_Click"/>
-                            </StackPanel>
-                            <Border x:Name="FocusBriefPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Visible">
+                            <!-- Soft project brief + underline tab strip (web ProjectSectionNav peer) -->
+                            <Grid>
+                                <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+                                <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+                                <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="12,8,12,0">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Project Focus" Opacity="0.55" FontSize="11"
+                                                   CharacterSpacing="40"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="2">
+                                            <Button x:Name="FocusTabOverviewBtn" Content="Overview" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabOverview_Click"/>
+                                            <Button x:Name="FocusTabBriefBtn" Content="Brief" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabBrief_Click"/>
+                                            <Button x:Name="FocusTabDrawingsBtn" Content="Drawings" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabDrawings_Click"/>
+                                            <Button x:Name="FocusTabDocumentsBtn" Content="Documents" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabDocuments_Click"/>
+                                            <Button x:Name="FocusTabFeesBtn" Content="Fees" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabFees_Click"/>
+                                            <Button x:Name="FocusTabSiteBtn" Content="Site" Style="{StaticResource HcwGhostButton}"
+                                                    Click="FocusTabSite_Click"/>
+                                        </StackPanel>
+                                        <Border Height="1" Background="{StaticResource HcwEdgeBrush}" Margin="0,0,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Overview · decisions + critical notes -->
+                            <Border x:Name="FocusOverviewPanel" Style="{StaticResource HcwFlatCard}" Visibility="Visible">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="Decision ledger" FontWeight="SemiBold"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="DecisionTitleBox" Header="Title" PlaceholderText="Client approved massing"/>
+                                            <TextBox x:Name="DecisionKindBox" Header="Impact" PlaceholderText="MAJOR / MINOR / CRITICAL"/>
+                                            <TextBox x:Name="DecisionStatusBox" Header="State" PlaceholderText="OPEN / DECIDED"/>
+                                            <TextBox x:Name="DecisionNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                        </StackPanel>
+                                        <ListView x:Name="DecisionsListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="160"
+                                                  SelectionChanged="DecisionsList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LedgerRow">
+                                                    <StackPanel Spacing="2" Padding="0,4">
+                                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Opacity="0.7" FontSize="12"
+                                                                   Text="{x:Bind Kind}"/>
+                                                        <TextBlock Opacity="0.65" FontSize="12"
+                                                                   Text="{x:Bind Status}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                    <TextBlock Text="Critical notes" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="NoteTitleBox" Header="Title" PlaceholderText="Setback conflict · north"/>
+                                            <TextBox x:Name="NoteKindBox" Header="Kind" PlaceholderText="SITE / CLIENT / REGULATORY"/>
+                                            <TextBox x:Name="NoteStatusBox" Header="Status" PlaceholderText="OPEN / CLOSED"/>
+                                            <TextBox x:Name="NoteNotesBox" Header="Detail" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                        </StackPanel>
+                                        <ListView x:Name="NotesListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="160"
+                                                  SelectionChanged="NotesList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LedgerRow">
+                                                    <StackPanel Spacing="2" Padding="0,4">
+                                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Opacity="0.7" FontSize="12"
+                                                                   Text="{x:Bind Kind}"/>
+                                                        <TextBlock Opacity="0.65" FontSize="12"
+                                                                   Text="{x:Bind Status}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Brief -->
+                            <Border x:Name="FocusBriefPanel" Style="{StaticResource HcwFlatCard}" Visibility="Collapsed">
                                 <StackPanel Spacing="8">
                                     <TextBox x:Name="FocusTitleBox" Header="Title"/>
                                     <TextBox x:Name="FocusRefBox" Header="Ref"/>
-                                    <TextBox x:Name="FocusStatusBox" Header="Status" PlaceholderText="ACTIVE / HOLD / CLOSED"/>
-                                    <TextBox x:Name="FocusPhaseBox" Header="Phase"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="FocusStatusBox" Grid.Column="0" Header="Status"
+                                                 PlaceholderText="ACTIVE / HOLD / CLOSED"/>
+                                        <TextBox x:Name="FocusPhaseBox" Grid.Column="1" Header="Phase"
+                                                 PlaceholderText="Concept / DD / Tender"/>
+                                    </Grid>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="FocusClientIdBox" Grid.Column="0" Header="Client id"
+                                                 PlaceholderText="From Clients list"/>
+                                        <TextBox x:Name="FocusWorkTypeBox" Grid.Column="1" Header="Work type"
+                                                 PlaceholderText="ARCHITECTURE"/>
+                                    </Grid>
+                                    <TextBox x:Name="FocusJurisdictionBox" Header="Jurisdiction"
+                                             PlaceholderText="BBMP / DTCP / …"/>
+                                    <TextBox x:Name="FocusSiteAddressBox" Header="Site address"
+                                             PlaceholderText="Survey / village / city"/>
                                     <TextBox x:Name="FocusNotesBox" Header="Brief / notes" AcceptsReturn="True"
-                                             TextWrapping="Wrap" MinHeight="80"/>
-                                    <TextBlock x:Name="FocusMetaText" FontFamily="Consolas" FontSize="12"
-                                               Opacity="0.7" TextWrapping="Wrap"/>
+                                             TextWrapping="Wrap" MinHeight="72"/>
+                                    <TextBlock Text="Risks &amp; opportunities" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="RiskTitleBox" Header="Title" PlaceholderText="Soil investigation delay"/>
+                                            <TextBox x:Name="RiskKindBox" Header="Kind" PlaceholderText="RISK / OPPORTUNITY"/>
+                                            <TextBox x:Name="RiskStatusBox" Header="Status" PlaceholderText="OPEN / MITIGATED"/>
+                                            <TextBox x:Name="RiskNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="40"/>
+                                        </StackPanel>
+                                        <ListView x:Name="RisksListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="140"
+                                                  SelectionChanged="RisksList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LedgerRow">
+                                                    <StackPanel Spacing="2" Padding="0,4">
+                                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Opacity="0.7" FontSize="12"
+                                                                   Text="{x:Bind Kind}"/>
+                                                        <TextBlock Opacity="0.65" FontSize="12"
+                                                                   Text="{x:Bind Status}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                    <TextBlock x:Name="FocusMetaText" Opacity="0.7" FontSize="12" TextWrapping="Wrap"/>
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button Content="Engine smoke (column)" Click="EngineSmoke_Click" MinHeight="44"/>
+                                        <Button Content="Engine smoke" Click="EngineSmoke_Click" MinHeight="44"/>
                                         <Button Content="Open AQC Estimation" Click="OpenAqcEstimation_Click" MinHeight="44"/>
                                         <Button Content="Open AQC BBS" Click="OpenAqcBbs_Click" MinHeight="44"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="FocusEngineText" FontFamily="Consolas" FontSize="12"
-                                               Opacity="0.75" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="FocusEngineText" Opacity="0.75" FontSize="12" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
-                            <Border x:Name="FocusFeesPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="Fees · proposals / invoices" FontWeight="SemiBold"/>
-                                    <TextBox x:Name="FeeTitleBox" Header="Title" PlaceholderText="Concept fee · Stage 1"/>
-                                    <TextBox x:Name="FeeAmountBox" Header="Amount (INR)" PlaceholderText="125000"/>
-                                    <TextBox x:Name="FeeStatusBox" Header="Status" PlaceholderText="DRAFT / ISSUED / PAID"/>
-                                    <TextBox x:Name="FeeNotesBox" Header="Notes" AcceptsReturn="True"
-                                             TextWrapping="Wrap" MinHeight="48"/>
-                                    <TextBlock x:Name="FeeListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Border>
-                            <Border x:Name="FocusDrawingsPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+
+                            <!-- Drawings -->
+                            <Border x:Name="FocusDrawingsPanel" Style="{StaticResource HcwFlatCard}" Visibility="Collapsed">
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="Drawings · register + artifact" FontWeight="SemiBold"/>
-                                    <TextBox x:Name="DrawingNumberBox" Header="Number" PlaceholderText="A-101"/>
-                                    <TextBox x:Name="DrawingTitleBox" Header="Title" PlaceholderText="Ground floor plan"/>
-                                    <TextBox x:Name="DrawingRevBox" Header="Rev" PlaceholderText="A"/>
-                                    <TextBox x:Name="DrawingStatusBox" Header="Status" PlaceholderText="WIP / READY / ISSUED"/>
-                                    <TextBox x:Name="DrawingPathBox" Header="Local file path (optional)"
-                                             PlaceholderText="D:\drawings\A-101.pdf"/>
-                                    <TextBox x:Name="DrawingNotesBox" Header="Notes" AcceptsReturn="True"
-                                             TextWrapping="Wrap" MinHeight="48"/>
-                                    <Button Content="Queue artifact ingest" Click="QueueDrawingArtifact_Click"
-                                            MinHeight="44" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="DrawingListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="DrawingNumberBox" Header="Number" PlaceholderText="A-101"/>
+                                            <TextBox x:Name="DrawingTitleBox" Header="Title" PlaceholderText="Ground floor plan"/>
+                                            <TextBox x:Name="DrawingRevBox" Header="Rev" PlaceholderText="A"/>
+                                            <TextBox x:Name="DrawingStatusBox" Header="Status" PlaceholderText="WIP / READY / ISSUED"/>
+                                            <TextBox x:Name="DrawingPathBox" Header="Local file path (optional)"
+                                                     PlaceholderText="D:\drawings\A-101.pdf"/>
+                                            <TextBox x:Name="DrawingNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                            <Button Content="Queue artifact ingest" Click="QueueDrawingArtifact_Click"
+                                                    MinHeight="44" HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                        <ListView x:Name="DrawingsListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="280"
+                                                  SelectionChanged="DrawingsList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:DrawingRow">
+                                                    <Grid ColumnSpacing="8" Padding="0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="70"/>
+                                                            <ColumnDefinition Width="80"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{x:Bind Number}" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Column="1" Text="{x:Bind Title}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="2" Text="{x:Bind Status}" Opacity="0.8"/>
+                                                        <TextBlock Grid.Column="3" Text="{x:Bind PublishState}" Opacity="0.7"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                    <TextBlock x:Name="DrawingListText" Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
-                            <Border x:Name="FocusDeliveryPanel" Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                    BorderBrush="#D0D4DC" BorderThickness="1" Visibility="Collapsed">
+
+                            <!-- Documents -->
+                            <Border x:Name="FocusDocumentsPanel" Style="{StaticResource HcwFlatCard}" Visibility="Collapsed">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="Delivery · snags · instructions · progress" FontWeight="SemiBold"/>
-                                    <TextBox x:Name="DeliveryKindBox" Header="Kind" PlaceholderText="SNAG / INSTRUCTION / PROGRESS"/>
-                                    <TextBox x:Name="DeliveryTitleBox" Header="Title" PlaceholderText="Site visit · Week 12"/>
-                                    <TextBox x:Name="DeliveryStatusBox" Header="Status" PlaceholderText="OPEN / DONE"/>
-                                    <TextBox x:Name="DeliveryNotesBox" Header="Notes" AcceptsReturn="True"
-                                             TextWrapping="Wrap" MinHeight="48"/>
-                                    <TextBlock x:Name="DeliveryListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Documents · local register (meta via presence)" FontWeight="SemiBold"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="260"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="DocTitleBox" Header="Title" PlaceholderText="Appointment letter"/>
+                                            <TextBox x:Name="DocKindBox" Header="Kind" PlaceholderText="LETTER / CONTRACT / OTHER"/>
+                                            <TextBox x:Name="DocStatusBox" Header="Status" PlaceholderText="DRAFT / ISSUED"/>
+                                            <TextBox x:Name="DocNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                        </StackPanel>
+                                        <ListView x:Name="DocumentsListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="220"
+                                                  SelectionChanged="DocumentsList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LedgerRow">
+                                                    <StackPanel Spacing="2" Padding="0,4">
+                                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Opacity="0.7" FontSize="12"
+                                                                   Text="{x:Bind Kind}"/>
+                                                        <TextBlock Opacity="0.65" FontSize="12"
+                                                                   Text="{x:Bind Status}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Fees -->
+                            <Border x:Name="FocusFeesPanel" Style="{StaticResource HcwFlatCard}" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Fees · proposals / invoices (not full GST COA)" FontWeight="SemiBold"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="260"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="FeeTitleBox" Header="Title" PlaceholderText="Concept fee · Stage 1"/>
+                                            <TextBox x:Name="FeeAmountBox" Header="Amount (INR)" PlaceholderText="125000"/>
+                                            <TextBox x:Name="FeeStatusBox" Header="Status" PlaceholderText="DRAFT / ISSUED / PAID"/>
+                                            <TextBox x:Name="FeeNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                        </StackPanel>
+                                        <ListView x:Name="FeesListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="220"
+                                                  SelectionChanged="FeesList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:FeeRow">
+                                                    <Grid ColumnSpacing="8" Padding="0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="100"/>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="80"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{x:Bind Title}" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="1" Text="{x:Bind Amount}"/>
+                                                        <TextBlock Grid.Column="2" Text="{x:Bind Status}" Opacity="0.8"/>
+                                                        <TextBlock Grid.Column="3" Text="{x:Bind PublishState}" Opacity="0.7"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                    <TextBlock x:Name="FeeListText" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Site (was Delivery) -->
+                            <Border x:Name="FocusSitePanel" Style="{StaticResource HcwFlatCard}" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Site · visits · snags · progress" FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Button x:Name="SiteFacetAllBtn" Content="All" Style="{StaticResource HcwGhostButton}"
+                                                Click="SiteFacetAll_Click"/>
+                                        <Button x:Name="SiteFacetVisitBtn" Content="Visits" Style="{StaticResource HcwGhostButton}"
+                                                Click="SiteFacetVisit_Click"/>
+                                        <Button x:Name="SiteFacetSnagBtn" Content="Snags" Style="{StaticResource HcwGhostButton}"
+                                                Click="SiteFacetSnag_Click"/>
+                                        <Button x:Name="SiteFacetProgressBtn" Content="Progress" Style="{StaticResource HcwGhostButton}"
+                                                Click="SiteFacetProgress_Click"/>
+                                    </StackPanel>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="260"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="8">
+                                            <TextBox x:Name="DeliveryKindBox" Header="Kind"
+                                                     PlaceholderText="VISIT / SNAG / PROGRESS / INSTRUCTION"/>
+                                            <TextBox x:Name="DeliveryTitleBox" Header="Title"
+                                                     PlaceholderText="Site visit · Week 12"/>
+                                            <TextBox x:Name="DeliveryStatusBox" Header="Status"
+                                                     PlaceholderText="OPEN / DONE"/>
+                                            <TextBox x:Name="DeliveryNotesBox" Header="Notes" AcceptsReturn="True"
+                                                     TextWrapping="Wrap" MinHeight="48"/>
+                                        </StackPanel>
+                                        <ListView x:Name="SiteListView" Style="{StaticResource HcwStageList}" Grid.Column="1" MinHeight="220"
+                                                  SelectionChanged="SiteList_SelectionChanged">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LedgerRow">
+                                                    <StackPanel Spacing="2" Padding="0,4">
+                                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Opacity="0.7" FontSize="12"
+                                                                   Text="{x:Bind Kind}"/>
+                                                        <TextBlock Opacity="0.65" FontSize="12"
+                                                                   Text="{x:Bind Status}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Grid>
+                                    <TextBlock x:Name="DeliveryListText" Visibility="Collapsed"/>
+                                    <!-- Alias for code that still references FocusDeliveryPanel -->
+                                    <Border x:Name="FocusDeliveryPanel" Visibility="Collapsed" Height="0"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </StackPanel>
 
                     <!-- CLIENTS -->
-                    <StackPanel x:Name="PanelClients" Spacing="16" Visibility="Collapsed">
+                    <StackPanel x:Name="PanelClients" Spacing="16" Visibility="Collapsed"
+                                HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Clients" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock Text="Local client directory in firm.db."
+                            <TextBlock Text="Clients" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
+                            <TextBlock Text="Local client directory in firm.db. Copy id into Focus Brief client link."
                                        Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBox x:Name="ClientNameBox" Header="Name" PlaceholderText="Owner / developer firm"/>
-                                <TextBox x:Name="ClientContactBox" Header="Contact" PlaceholderText="Primary person"/>
-                                <TextBox x:Name="ClientEmailBox" Header="Email" PlaceholderText="ops@client.example"/>
-                                <TextBox x:Name="ClientNotesBox" Header="Notes" AcceptsReturn="True"
-                                         TextWrapping="Wrap" MinHeight="48"/>
-                                <TextBlock x:Name="ClientListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Border Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="8">
+                                    <TextBox x:Name="ClientNameBox" Header="Name" PlaceholderText="Owner / developer firm"/>
+                                    <TextBox x:Name="ClientContactBox" Header="Contact" PlaceholderText="Primary person"/>
+                                    <TextBox x:Name="ClientEmailBox" Header="Email" PlaceholderText="ops@client.example"/>
+                                    <TextBox x:Name="ClientNotesBox" Header="Notes" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="48"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="8">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Name" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                        <TextBlock Grid.Column="1" Text="Contact" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="Email" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                        <TextBlock Grid.Column="3" Text="Publish" FontWeight="SemiBold" Opacity="0.65" FontSize="12"/>
+                                    </Grid>
+                                    <ListView x:Name="ClientsListView" Style="{StaticResource HcwStageList}" MinHeight="240"
+                                              SelectionChanged="ClientsList_SelectionChanged">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="models:ClientRow">
+                                                <Grid ColumnSpacing="8" Padding="0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="140"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{x:Bind Name}" FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Contact}" Opacity="0.8"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{x:Bind Email}" Opacity="0.75"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="3" Text="{x:Bind PublishState}" Opacity="0.7"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </StackPanel>
+                            </Grid>
                         </Border>
+                        <TextBlock x:Name="ClientListText" Visibility="Collapsed"/>
                     </StackPanel>
 
                     <!-- TASKS -->
-                    <StackPanel x:Name="PanelTasks" Spacing="16" Visibility="Collapsed">
+                    <StackPanel x:Name="PanelTasks" Spacing="16" Visibility="Collapsed"
+                                HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Tasks" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
-                            <TextBlock Text="Local firm.db → publish to Mongo ops."
+                            <TextBlock Text="Tasks" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
+                            <TextBlock Text="Local firm.db → publish taskStatus via Bridge. Toggle status on the selected row."
                                        Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBox x:Name="TaskTitleBox" Header="Title" PlaceholderText="Task title"/>
-                                <TextBox x:Name="TaskProjectBox" Header="Project id"
-                                         PlaceholderText="Uses Focus project when set"/>
-                                <TextBlock x:Name="TaskListText" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                        <Border Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TaskTitleBox" Grid.Column="0" Header="Title"
+                                             PlaceholderText="Task title"/>
+                                    <TextBox x:Name="TaskProjectBox" Grid.Column="1" Header="Project id"
+                                             PlaceholderText="Uses Focus project when set"/>
+                                    <Button Grid.Column="2" Content="Toggle status" Click="ToggleTaskStatus_Click"
+                                            MinHeight="44" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                </Grid>
+                                <ListView x:Name="TasksListView" Style="{StaticResource HcwStageList}" MinHeight="240"
+                                          SelectionChanged="TasksList_SelectionChanged">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:TaskRow">
+                                            <Grid ColumnSpacing="8" Padding="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{x:Bind Title}" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="1" Text="{x:Bind ProjectId}" Opacity="0.75"
+                                                           FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="2" Text="{x:Bind Status}"/>
+                                                <TextBlock Grid.Column="3" Text="{x:Bind PublishState}" Opacity="0.7"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <TextBlock x:Name="TaskListText" Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -260,12 +740,11 @@
                     <!-- STUB destinations -->
                     <StackPanel x:Name="PanelStub" Spacing="16" Visibility="Collapsed">
                         <StackPanel Spacing="4">
-                            <TextBlock x:Name="StubTitle" Text="Coming on desktop" FontSize="22" FontWeight="SemiBold" Foreground="#141517"/>
+                            <TextBlock x:Name="StubTitle" Text="Coming on desktop" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource HcwInkBrush}"/>
                             <TextBlock x:Name="StubBlurb" Opacity="0.7" TextWrapping="Wrap"
                                        Text="This module is on the web IA; desktop depth lands in a later slice."/>
                         </StackPanel>
-                        <Border Padding="16" CornerRadius="8" Background="#FFFFFF"
-                                BorderBrush="#D0D4DC" BorderThickness="1">
+                        <Border Padding="16" CornerRadius="8" Style="{StaticResource HcwFlatCard}">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Honest empty — use Projects / Focus / Clients / Tasks / Ask ESTI for live desktop work."
                                            Opacity="0.75" TextWrapping="Wrap"/>
@@ -278,134 +757,554 @@
             </ScrollViewer>
 
             <!-- RIGHT SLOT · Ask ESTI -->
-            <Border x:Name="RightSlotPanel" Grid.Column="1" Background="#ECEEF2"
-                    BorderBrush="#D0D4DC" BorderThickness="1,0,0,0" Padding="16" Visibility="Collapsed">
+            <Border x:Name="RightSlotPanel" Grid.Column="1" Background="{StaticResource HcwSoftBrush}"
+                    BorderBrush="{StaticResource HcwEdgeBrush}" BorderThickness="1,0,0,0"
+                    Padding="16" Visibility="Collapsed">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Ask ESTI" FontSize="18" FontWeight="SemiBold" Foreground="#141517"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8F2;" FontSize="18" Foreground="{StaticResource HcwAccentBrush}"/>
+                        <TextBlock Text="Ask ESTI" FontSize="18" FontWeight="SemiBold"
+                                   Foreground="{StaticResource HcwInkBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <TextBlock Text="Local Ollama only · transcripts never sync."
-                               Opacity="0.65" FontSize="12" TextWrapping="Wrap"/>
+                               Style="{StaticResource HcwLabel}" TextWrapping="Wrap"/>
                     <TextBox x:Name="EstiPromptBox" Header="Question"
                              PlaceholderText="What should we do next?"
-                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" CornerRadius="8"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Ask" Click="AskEsti_Click" MinHeight="44" MinWidth="88"
-                                Background="#FF4F18" Foreground="White"/>
-                        <Button Content="Probe" Click="ProbeOllama_Click" MinHeight="44"/>
-                        <Button Content="Close" Click="ToggleRightSlot_Click" MinHeight="44"/>
+                        <Button Content="Ask" Click="AskEsti_Click" MinWidth="88"
+                                Style="{StaticResource HcwPrimaryButton}"/>
+                        <Button Content="Probe" Click="ProbeOllama_Click" Style="{StaticResource HcwDockButton}"/>
+                        <Button Content="Close" Click="ToggleRightSlot_Click" Style="{StaticResource HcwDockButton}"/>
                     </StackPanel>
-                    <TextBlock x:Name="EstiReplyText" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock x:Name="EstiReplyText" TextWrapping="Wrap" FontSize="13"
+                               Foreground="{StaticResource HcwInkBrush}"/>
                 </StackPanel>
             </Border>
         </Grid>
 
-        <!-- FLOATING OVERLAYS (dock + taskbar + clock) -->
+        <!-- FLOATING OVERLAYS — PORTAL_CHROME: footer 60 · inset 16 · dock bottom 92 · clock 100 BR -->
         <Grid Grid.RowSpan="2" IsHitTestVisible="True">
-            <!-- ActionDock floating -->
-            <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                    Margin="16,0,16,92" MaxWidth="960" MinWidth="480"
-                    Background="#ECEEF2" CornerRadius="8" Padding="12,8"
-                    BorderBrush="#D0D4DC" BorderThickness="1">
+            <!-- Dim catcher — closes in-window Wellness panel (same scale as shell, not system Flyout) -->
+            <Rectangle x:Name="WellnessDismissCatcher" Fill="#01000000" Visibility="Collapsed"
+                       IsHitTestVisible="True" Tapped="WellnessDismissCatcher_Tapped"/>
+
+            <!-- Wellness panel — web WellnessPanel popover peer: 320 · p20 · minHeight 340 · 1× shell -->
+            <Grid x:Name="WellnessPanelHost" Visibility="Collapsed"
+                  VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                  Width="320" MinHeight="340" MaxHeight="520"
+                  Margin="16,0,16,92">
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="20">
+                    <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Wellbeing" FontWeight="SemiBold" FontSize="14"
+                                       Foreground="{StaticResource HcwInkBrush}"
+                                       FontFamily="{StaticResource HcwFontFamily}"/>
+                            <Grid ColumnSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="WellnessTabBreathe" Grid.Column="0" Content="Breathe"
+                                        Style="{StaticResource HcwWellnessChip}"
+                                        Click="WellnessTabBreathe_Click"/>
+                                <Button x:Name="WellnessTabStretch" Grid.Column="1" Content="Stretch"
+                                        Style="{StaticResource HcwWellnessChip}"
+                                        Click="WellnessTabStretch_Click"/>
+                                <Button x:Name="WellnessTabEyes" Grid.Column="2" Content="Eyes"
+                                        Style="{StaticResource HcwWellnessChip}"
+                                        Click="WellnessTabEyes_Click"/>
+                            </Grid>
+                            <Border Height="1" Background="{StaticResource HcwEdgeBrush}"/>
+                            <!-- Guide stage — esti-breath-orb 176 · stretch 88×112 · eye 120×72 -->
+                            <Grid MinHeight="180" Height="200">
+                                <Grid x:Name="WellnessBreathHost" Width="176" Height="176"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      RenderTransformOrigin="0.5,0.5">
+                                    <Grid.RenderTransform>
+                                        <ScaleTransform x:Name="WellnessOrbScale" ScaleX="0.55" ScaleY="0.55"/>
+                                    </Grid.RenderTransform>
+                                    <Ellipse Width="176" Height="176" Fill="{StaticResource HcwNeuDarkBrush}"
+                                             Margin="9,9,0,0"/>
+                                    <Ellipse Width="176" Height="176" Fill="{StaticResource HcwNeuLightBrush}"
+                                             Margin="0,0,9,9"/>
+                                    <Ellipse x:Name="WellnessOrb" Width="176" Height="176"
+                                             Fill="{StaticResource HcwSoftBrush}"
+                                             Stroke="#28FF4F18" StrokeThickness="1.5"/>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="2">
+                                        <TextBlock x:Name="WellnessPhaseText" Text="Ready"
+                                                   FontWeight="Bold" FontSize="15"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource HcwAccentBrush}"/>
+                                        <TextBlock x:Name="WellnessPhaseCountText" Text=""
+                                                   FontFamily="Cascadia Mono, Consolas" FontSize="30"
+                                                   FontWeight="Light" HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid x:Name="WellnessStretchHost" Width="88" Height="120"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Visibility="Collapsed" RenderTransformOrigin="0.5,1">
+                                    <Grid.RenderTransform>
+                                        <CompositeTransform x:Name="WellnessStretchXform"/>
+                                    </Grid.RenderTransform>
+                                    <Border Width="88" Height="112" CornerRadius="44,44,12,12"
+                                            Background="{StaticResource HcwNeuDarkBrush}" Margin="5,5,0,0"/>
+                                    <Border Width="88" Height="112" CornerRadius="44,44,12,12"
+                                            Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,5,5"/>
+                                    <Border Width="88" Height="112" CornerRadius="44,44,12,12"
+                                            Background="{StaticResource HcwSoftBrush}">
+                                        <Ellipse Width="28" Height="28" Margin="0,14,0,0"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Top"
+                                                 Fill="#14151714"/>
+                                    </Border>
+                                </Grid>
+                                <Grid x:Name="WellnessEyeHost" Width="120" Height="72"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                                    <Grid.RenderTransform>
+                                        <CompositeTransform x:Name="WellnessEyeXform"/>
+                                    </Grid.RenderTransform>
+                                    <Ellipse Width="120" Height="72" Fill="{StaticResource HcwNeuDarkBrush}"
+                                             Margin="4,4,0,0"/>
+                                    <Ellipse Width="120" Height="72" Fill="{StaticResource HcwNeuLightBrush}"
+                                             Margin="0,0,4,4"/>
+                                    <Ellipse Width="120" Height="72" Fill="{StaticResource HcwSoftBrush}"/>
+                                    <Ellipse x:Name="WellnessIris" Width="36" Height="36"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Fill="{StaticResource HcwAccentBrush}"
+                                             RenderTransformOrigin="0.5,0.5">
+                                        <Ellipse.RenderTransform>
+                                            <CompositeTransform x:Name="WellnessIrisXform"/>
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Grid>
+                            </Grid>
+                            <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                <TextBlock x:Name="WellnessCueText" Text="Press play to begin"
+                                           FontSize="12" Opacity="0.75" TextWrapping="Wrap"
+                                           TextAlignment="Center" MaxWidth="280"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{StaticResource HcwInkBrush}"/>
+                                <TextBlock x:Name="WellnessStepText" Text=""
+                                           FontSize="11" Opacity="0.6"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{StaticResource HcwInkBrush}"/>
+                                <TextBlock x:Name="WellnessTimerText" Text="05:00"
+                                           FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{StaticResource HcwMutedBrush}"/>
+                            </StackPanel>
+                            <!-- Pattern row 48px — web CONTROLS_ROW_H -->
+                            <Grid Height="48" x:Name="WellnessPatternRow">
+                                <StackPanel Orientation="Horizontal" Spacing="6"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Button x:Name="WellnessPatRelax" Content="Relax" Tag="relax"
+                                            Style="{StaticResource HcwWellnessChip}"
+                                            Click="WellnessPattern_Click"/>
+                                    <Button x:Name="WellnessPatFocus" Content="Focus" Tag="focus"
+                                            Style="{StaticResource HcwWellnessChip}"
+                                            Click="WellnessPattern_Click"/>
+                                    <Button x:Name="WellnessPatCalm" Content="Calm" Tag="anxiety"
+                                            Style="{StaticResource HcwWellnessChip}"
+                                            Click="WellnessPattern_Click"/>
+                                    <Button x:Name="WellnessPatDaily" Content="Daily" Tag="daily"
+                                            Style="{StaticResource HcwWellnessChip}"
+                                            Click="WellnessPattern_Click"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid MinHeight="56">
+                                <TextBlock x:Name="WellnessGoalText" Style="{StaticResource HcwLabel}"
+                                           TextWrapping="Wrap" VerticalAlignment="Center"
+                                           Margin="0,0,56,0" FontSize="12"/>
+                                <Button x:Name="WellnessPlayBtn" Style="{StaticResource HcwDockPrimary}"
+                                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Width="48" Height="48" MinHeight="48" MaxHeight="48"
+                                        MinWidth="48" Padding="0" CornerRadius="24"
+                                        Click="WellnessPlay_Click"
+                                        ToolTipService.ToolTip="Start / stop">
+                                    <FontIcon x:Name="WellnessPlayIcon" Glyph="&#xE768;" FontSize="20"
+                                              Foreground="{StaticResource HcwAccentBrush}"/>
+                                </Button>
+                            </Grid>
+                            <Border Height="1" Background="{StaticResource HcwEdgeBrush}"/>
+                            <TextBlock Text="Reminders" FontWeight="SemiBold" FontSize="12"
+                                       Foreground="{StaticResource HcwInkBrush}"/>
+                            <Grid ColumnSpacing="8" RowSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="64"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <CheckBox x:Name="WellnessHydrationToggle" Grid.Row="0" Grid.Column="0"
+                                          Content="Hydration" MinHeight="32"
+                                          Checked="WellnessPrefs_Changed" Unchecked="WellnessPrefs_Changed"/>
+                                <NumberBox x:Name="WellnessHydrationMin" Grid.Row="0" Grid.Column="1"
+                                           Minimum="1" Maximum="240" SpinButtonPlacementMode="Compact"
+                                           Height="32" ValueChanged="WellnessPrefsNumber_Changed"/>
+                                <CheckBox x:Name="WellnessStretchToggle" Grid.Row="1" Grid.Column="0"
+                                          Content="Stretch" MinHeight="32"
+                                          Checked="WellnessPrefs_Changed" Unchecked="WellnessPrefs_Changed"/>
+                                <NumberBox x:Name="WellnessStretchMin" Grid.Row="1" Grid.Column="1"
+                                           Minimum="1" Maximum="240" SpinButtonPlacementMode="Compact"
+                                           Height="32" ValueChanged="WellnessPrefsNumber_Changed"/>
+                                <CheckBox x:Name="WellnessEyesToggle" Grid.Row="2" Grid.Column="0"
+                                          Content="Eyes" MinHeight="32"
+                                          Checked="WellnessPrefs_Changed" Unchecked="WellnessPrefs_Changed"/>
+                                <NumberBox x:Name="WellnessEyesMin" Grid.Row="2" Grid.Column="1"
+                                           Minimum="1" Maximum="240" SpinButtonPlacementMode="Compact"
+                                           Height="32" ValueChanged="WellnessPrefsNumber_Changed"/>
+                            </Grid>
+                            <TextBlock Text="Intervals in minutes · saved on this device"
+                                       Style="{StaticResource HcwLabel}" FontSize="11"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Wellness reminder banner (web WellnessReminderBanner peer) -->
+            <Border x:Name="WellnessReminderBanner" Visibility="Collapsed"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                    Margin="16,0,16,168" MinWidth="320" MaxWidth="420" CornerRadius="8"
+                    Background="{StaticResource HcwSoftBrush}" Padding="12,10">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Button Content="Clear" Click="ClearForm_Click" MinHeight="44" MinWidth="72"/>
-                        <Button x:Name="DockImportBtn" Content="Import" Click="ImportCatalog_Click"
-                                MinHeight="44" Visibility="Collapsed"/>
-                    </StackPanel>
-                    <Button x:Name="DockCreateBtn" Grid.Column="1" Content="Save" Click="DockCreate_Click"
-                            MinHeight="44" MinWidth="120"/>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
-                                HorizontalAlignment="Right">
-                        <Button Content="Reload" Click="DockReload_Click" MinHeight="44"/>
-                        <Button x:Name="DockCommitBtn" Content="Publish" Click="DockCommit_Click"
-                                Background="#FF4F18" Foreground="White" MinHeight="44" MinWidth="120"/>
-                    </StackPanel>
+                    <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="4,4,0,0"
+                            IsHitTestVisible="False"/>
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <FontIcon x:Name="WellnessReminderIcon" Glyph="&#xE9D9;" FontSize="18"
+                                  Foreground="{StaticResource HcwAccentBrush}" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="WellnessReminderTitle" FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{StaticResource HcwInkBrush}"/>
+                            <TextBlock x:Name="WellnessReminderSubtitle" FontSize="12" Opacity="0.7"
+                                       TextWrapping="Wrap" Foreground="{StaticResource HcwInkBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="2" Content="Start" Style="{StaticResource HcwDockPrimary}"
+                                Click="WellnessReminderStart_Click" MinWidth="64"/>
+                        <Button Grid.Column="3" Style="{StaticResource HcwGhostButton}" MinWidth="36"
+                                Click="WellnessReminderDismiss_Click" ToolTipService.ToolTip="Dismiss">
+                            <FontIcon Glyph="&#xE711;" FontSize="12"/>
+                        </Button>
+                    </Grid>
                 </Grid>
             </Border>
 
-            <!-- Taskbar floating -->
-            <Border VerticalAlignment="Bottom" Margin="16,0,16,16" Height="60"
-                    Background="#ECEEF2" CornerRadius="8" Padding="12,0"
-                    BorderBrush="#D0D4DC" BorderThickness="1">
-                <Grid>
+            <!-- ActionDock — kit peer: hug-content NEU_RAISED · LEFT destroy · CENTER create · RIGHT commit -->
+            <Grid x:Name="DockChrome" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                  Margin="16,0,16,92">
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="5,5,0,0"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,5,5"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <!-- LEFT — destroy / discard -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Style="{StaticResource HcwDockDanger}" Click="ClearForm_Click"
+                                    ToolTipService.ToolTip="Clear / discard form">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE894;" FontSize="14"
+                                              Foreground="{StaticResource HcwDangerBrush}"/>
+                                    <TextBlock Text="Clear" VerticalAlignment="Center"
+                                               Foreground="{StaticResource HcwDangerBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="DockImportBtn" Style="{StaticResource HcwDockButton}"
+                                    Click="ImportCatalog_Click" Visibility="Collapsed"
+                                    ToolTipService.ToolTip="Import from Connect">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8B5;" FontSize="14"
+                                              Foreground="{StaticResource HcwInkBrush}"/>
+                                    <TextBlock Text="Import" VerticalAlignment="Center"
+                                               Foreground="{StaticResource HcwInkBrush}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <Border Style="{StaticResource HcwDockGroove}"/>
+                        <!-- CENTER — create / save local -->
+                        <Button x:Name="DockCreateBtn" Style="{StaticResource HcwDockPrimary}"
+                                Click="DockCreate_Click" ToolTipService.ToolTip="Save">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon x:Name="DockCreateIcon" Glyph="&#xE710;" FontSize="14"
+                                          Foreground="{StaticResource HcwAccentBrush}"/>
+                                <TextBlock x:Name="DockCreateLabel" Text="Save" VerticalAlignment="Center"
+                                           Foreground="{StaticResource HcwAccentBrush}" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                        <Border Style="{StaticResource HcwDockGroove}"/>
+                        <!-- RIGHT — commit / publish -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Style="{StaticResource HcwDockButton}" Click="DockReload_Click"
+                                    ToolTipService.ToolTip="Reload">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE72C;" FontSize="14"
+                                              Foreground="{StaticResource HcwInkBrush}"/>
+                                    <TextBlock Text="Reload" VerticalAlignment="Center"
+                                               Foreground="{StaticResource HcwInkBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="DockCommitBtn" Style="{StaticResource HcwDockPrimary}"
+                                    Click="DockCommit_Click" ToolTipService.ToolTip="Publish">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon x:Name="DockCommitIcon" Glyph="&#xE898;" FontSize="14"
+                                              Foreground="{StaticResource HcwAccentBrush}"/>
+                                    <TextBlock x:Name="DockCommitLabel" Text="Publish" VerticalAlignment="Center"
+                                               Foreground="{StaticResource HcwAccentBrush}" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Taskbar — NEU_RAISED, height 60, hits 35 -->
+            <Grid x:Name="TaskbarChrome" VerticalAlignment="Bottom" Margin="16,0,16,16" Height="60">
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
+                <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="12,0">
+                <Grid Height="60">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <!-- LEFT tools -->
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Button Content="Calc" Click="CalcStub_Click" MinHeight="35" MinWidth="48" Padding="8,4"/>
-                        <Button Content="Home" Click="NavHome_Click" MinHeight="35" MinWidth="48" Padding="8,4"/>
+                    <!-- LEFT — wellness · calculator (web AppFooterBar) -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <Button x:Name="NavWellnessBtn" Style="{StaticResource HcwGhostButton}" MinWidth="40"
+                                Click="WellnessToggle_Click" ToolTipService.ToolTip="Wellbeing · Breathe · Stretch · Eyes">
+                            <FontIcon Glyph="&#xE9D9;" FontSize="16"/>
+                        </Button>
+                        <Button x:Name="NavCalcBtn" Style="{StaticResource HcwGhostButton}" MinWidth="40"
+                                Click="CalcToggle_Click" ToolTipService.ToolTip="Calculator">
+                            <Button.Flyout>
+                                <Flyout x:Name="CalcFlyout" Placement="Top">
+                                    <StackPanel Width="300" Spacing="12" Padding="4">
+                                        <Grid>
+                                            <TextBlock Text="Calculator" FontWeight="SemiBold" FontSize="14"
+                                                       Foreground="{StaticResource HcwInkBrush}"
+                                                       VerticalAlignment="Center"/>
+                                            <ToggleSwitch x:Name="CalcImperialToggle" HorizontalAlignment="Right"
+                                                          OffContent="m" OnContent="ft·in"
+                                                          Toggled="CalcImperial_Toggled"/>
+                                        </Grid>
+                                        <TextBlock x:Name="CalcResultText" Text="0 m"
+                                                   FontFamily="Cascadia Mono, Consolas" FontSize="28"
+                                                   Foreground="{StaticResource HcwAccentBrush}"
+                                                   HorizontalAlignment="Right" TextWrapping="WrapWholeWords"/>
+                                        <TextBox x:Name="CalcExprBox" PlaceholderText="e.g. 3.5 + 2*4"
+                                                 CornerRadius="8" TextChanged="CalcExpr_Changed"
+                                                 KeyDown="CalcExpr_KeyDown"/>
+                                        <TextBlock Text="Bare numbers = metres · + − × ÷ ( )"
+                                                   Style="{StaticResource HcwLabel}"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                            <FontIcon Glyph="&#xE1D0;" FontSize="16"/>
+                        </Button>
                     </StackPanel>
-                    <!-- CENTER module nav -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                    <!-- CENTER — Home + studioNav (web RibbonNavCluster) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2"
                                 HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Button x:Name="NavProjectsBtn" Content="Projects" Click="NavProjects_Click" MinHeight="35" Padding="10,4"/>
-                        <Button x:Name="NavClientsBtn" Content="Clients" Click="NavClients_Click" MinHeight="35" Padding="10,4"/>
-                        <Button x:Name="NavPeopleBtn" Content="People" Click="NavPeople_Click" MinHeight="35" Padding="10,4">
+                        <Button x:Name="NavHomeBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavHome_Click" ToolTipService.ToolTip="Studio Intelligence">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE80F;" FontSize="14"/>
+                                <TextBlock Text="Home" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="NavProjectsBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavProjects_Click" ToolTipService.ToolTip="Projects">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
+                                <TextBlock Text="Projects" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="NavClientsBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavClients_Click" ToolTipService.ToolTip="Clients">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE77B;" FontSize="14"/>
+                                <TextBlock Text="Clients" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="NavPeopleBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavPeople_Click" ToolTipService.ToolTip="People">
                             <Button.Flyout>
                                 <MenuFlyout x:Name="PeopleFlyout"/>
                             </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE716;" FontSize="14"/>
+                                <TextBlock Text="People" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                        <Button x:Name="NavOfficeBtn" Content="Office" Click="NavOffice_Click" MinHeight="35" Padding="10,4">
+                        <Button x:Name="NavOfficeBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavOffice_Click" ToolTipService.ToolTip="Office">
                             <Button.Flyout>
                                 <MenuFlyout x:Name="OfficeFlyout"/>
                             </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE821;" FontSize="14"/>
+                                <TextBlock Text="Office" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                        <Button x:Name="NavFinanceBtn" Content="Finance" Click="NavFinance_Click" MinHeight="35" Padding="10,4">
+                        <Button x:Name="NavFinanceBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavFinance_Click" ToolTipService.ToolTip="Finance">
                             <Button.Flyout>
                                 <MenuFlyout x:Name="FinanceFlyout"/>
                             </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8C7;" FontSize="14"/>
+                                <TextBlock Text="Finance" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                        <Button x:Name="NavAdminBtn" Content="Admin" Click="NavAdmin_Click" MinHeight="35" Padding="10,4">
+                        <Button x:Name="NavAdminBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="NavAdmin_Click" ToolTipService.ToolTip="Admin">
                             <Button.Flyout>
                                 <MenuFlyout x:Name="AdminFlyout"/>
                             </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE713;" FontSize="14"/>
+                                <TextBlock Text="Admin" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                     </StackPanel>
-                    <!-- RIGHT tray -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <TextBlock x:Name="TrayText" Text="Ready" FontSize="11" Opacity="0.55"
-                                   VerticalAlignment="Center" MaxWidth="120" TextTrimming="CharacterEllipsis"/>
-                        <Button Content="Sync" Click="Flush_Click" MinHeight="35" Padding="10,4"/>
-                        <Button Content="Activate" Click="ShowActivateFlyout_Click" MinHeight="35" Padding="10,4">
+                        <TextBlock x:Name="TrayText" Text="Ready" Style="{StaticResource HcwLabel}"
+                                   VerticalAlignment="Center" MaxWidth="100" TextTrimming="CharacterEllipsis"/>
+                        <!-- Sync status chip — soft-neu, height 35 -->
+                        <Grid x:Name="SyncStatusChip" Height="35" VerticalAlignment="Center"
+                              Tapped="SyncStatusChip_Tapped">
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="3,3,0,0"/>
+                            <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,3,3"/>
+                            <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}" Padding="10,0">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <Ellipse x:Name="SyncStatusDot" Width="8" Height="8"
+                                             Fill="{StaticResource HcwMutedBrush}"
+                                             VerticalAlignment="Center"/>
+                                    <FontIcon x:Name="SyncStatusIcon" Glyph="&#xE753;" FontSize="12"
+                                              Foreground="{StaticResource HcwMutedBrush}"
+                                              VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="SyncStatusText" Text="Unbound" FontSize="12"
+                                               Foreground="{StaticResource HcwInkBrush}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <Button x:Name="SyncFlushBtn" Style="{StaticResource HcwGhostButton}" Click="Flush_Click"
+                                ToolTipService.ToolTip="Flush outbox to hub">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE895;" FontSize="14"/>
+                                <TextBlock Text="Sync" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="LicenceBtn" Style="{StaticResource HcwGhostButton}"
+                                Click="ShowLicenceFlyout_Click"
+                                ToolTipService.ToolTip="Licence from AORMS Connect">
                             <Button.Flyout>
-                                <Flyout>
-                                    <StackPanel Spacing="8" Width="300" Padding="4">
-                                        <TextBlock x:Name="HubStatusText" TextWrapping="Wrap" FontSize="11"/>
-                                        <TextBox x:Name="LicenseKeyBox" PlaceholderText="License key (HLP-…)"/>
-                                        <Button Content="Activate licence" Click="Activate_Click" MinHeight="40"/>
+                                <Flyout x:Name="LicenceFlyout">
+                                    <StackPanel Spacing="8" Width="320" Padding="4">
+                                        <TextBlock Text="Licence · AORMS Connect" FontWeight="SemiBold" FontSize="13"
+                                                   Foreground="{StaticResource HcwInkBrush}"/>
+                                        <TextBlock Text="Activate only in AORMS Connect. This app imports session.json."
+                                                   TextWrapping="Wrap" FontSize="11" Opacity="0.75"/>
+                                        <TextBlock x:Name="HubStatusText" TextWrapping="Wrap" FontSize="11"
+                                                   FontFamily="Consolas"/>
+                                        <Button Content="Re-import Connect session" Click="ReimportConnectSession_Click"
+                                                Style="{StaticResource HcwPrimaryButton}"/>
                                         <TextBlock x:Name="LogText" Opacity="0.7" TextWrapping="Wrap"
                                                    FontFamily="Consolas" FontSize="10"/>
                                     </StackPanel>
                                 </Flyout>
                             </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE72E;" FontSize="14"/>
+                                <TextBlock x:Name="LicenceBtnLabel" Text="Licence" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                     </StackPanel>
                 </Grid>
-            </Border>
+                </Border>
+            </Grid>
 
-            <!-- Analogue clock BR -->
-            <Border x:Name="ClockFace" Width="100" Height="100" CornerRadius="50"
-                    Background="#FFFFFF" BorderBrush="#D0D4DC" BorderThickness="2"
-                    VerticalAlignment="Bottom" HorizontalAlignment="Right"
-                    Margin="0,0,16,92" IsHitTestVisible="False">
-                <Canvas Width="100" Height="100">
-                    <Line x:Name="ClockHour" X1="50" Y1="50" X2="50" Y2="28"
-                          Stroke="#141517" StrokeThickness="3" StrokeLineJoin="Round"/>
-                    <Line x:Name="ClockMinute" X1="50" Y1="50" X2="50" Y2="18"
-                          Stroke="#141517" StrokeThickness="2"/>
-                    <Line x:Name="ClockSecond" X1="50" Y1="50" X2="50" Y2="14"
-                          Stroke="#FF4F18" StrokeThickness="1"/>
-                    <Ellipse Canvas.Left="46" Canvas.Top="46" Width="8" Height="8"
-                             Fill="#FF4F18"/>
-                </Canvas>
-            </Border>
+            <!-- Analogue clock + Pomodoro — design 100/127, shown at 0.8× (face 80) -->
+            <StackPanel x:Name="ClockPomodoroHost"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                        Margin="0,0,16,92" Spacing="4" IsHitTestVisible="True"
+                        Canvas.ZIndex="20">
+                <Viewbox Width="102" Height="102" Stretch="Uniform" HorizontalAlignment="Center">
+                <Grid x:Name="PomodoroDial" Width="127" Height="127"
+                      ToolTipService.ToolTip="Pomodoro — click start/pause · double-click reset · drag orange crown to set">
+                    <!-- Opaque hit plate (empty shapes don't receive taps) -->
+                    <Ellipse x:Name="PomodoroHitPlate" Width="127" Height="127"
+                             Fill="#01F2F4F7" Stroke="Transparent"
+                             Tapped="Pomodoro_Tapped" DoubleTapped="Pomodoro_DoubleTapped"/>
+                    <!-- Soft-neu circular face (visual only) -->
+                    <Grid Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          IsHitTestVisible="False">
+                        <Ellipse Fill="{StaticResource HcwNeuDarkBrush}" Margin="5,5,0,0"/>
+                        <Ellipse Fill="{StaticResource HcwNeuLightBrush}" Margin="0,0,5,5"/>
+                        <Border x:Name="ClockFace" Width="100" Height="100" CornerRadius="50"
+                                Background="{StaticResource HcwSoftBrush}" BorderThickness="0">
+                            <Grid>
+                                <Canvas Width="100" Height="100">
+                                    <Line x:Name="ClockHour" X1="50" Y1="50" X2="50" Y2="28"
+                                          Stroke="{StaticResource HcwInkBrush}" StrokeThickness="3" StrokeLineJoin="Round"/>
+                                    <Line x:Name="ClockMinute" X1="50" Y1="50" X2="50" Y2="18"
+                                          Stroke="{StaticResource HcwInkBrush}" StrokeThickness="2"/>
+                                    <Line x:Name="ClockSecond" X1="50" Y1="50" X2="50" Y2="14"
+                                          Stroke="{StaticResource HcwAccentBrush}" StrokeThickness="1"/>
+                                </Canvas>
+                                <BitmapIcon UriSource="ms-appx:///Assets/aorms-mark.png"
+                                            Width="14" Height="14"
+                                            Foreground="{StaticResource HcwAccentBrush}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <!-- Track + remaining arc (above face, below crown) -->
+                    <Ellipse Width="116" Height="116" Stroke="#FFD4C4" StrokeThickness="2.4"
+                             Fill="Transparent" IsHitTestVisible="False"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Path x:Name="PomodoroArc" Width="127" Height="127" Stretch="None"
+                          Stroke="{StaticResource HcwAccentBrush}"
+                          StrokeThickness="2.4" StrokeLineJoin="Round" StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round" IsHitTestVisible="False"/>
+                    <Canvas x:Name="PomodoroCanvas" Width="127" Height="127" IsHitTestVisible="True">
+                        <Line x:Name="PomodoroArm" X1="63.5" Y1="63.5" X2="63.5" Y2="8"
+                              Stroke="{StaticResource HcwAccentBrush}" StrokeThickness="1.2"
+                              Opacity="0.9" IsHitTestVisible="False"/>
+                        <!-- Larger hit target for crown drag -->
+                        <Ellipse x:Name="PomodoroCrownHit" Width="28" Height="28"
+                                 Fill="#01FFFFFF" Canvas.Left="49.5" Canvas.Top="-5"
+                                 PointerPressed="PomodoroCrown_PointerPressed"
+                                 PointerMoved="PomodoroCrown_PointerMoved"
+                                 PointerReleased="PomodoroCrown_PointerReleased"
+                                 PointerCaptureLost="PomodoroCrown_PointerReleased"/>
+                        <Ellipse x:Name="PomodoroCrown" Width="10" Height="10"
+                                 Fill="{StaticResource HcwAccentBrush}" Stroke="White" StrokeThickness="1"
+                                 Canvas.Left="58.5" Canvas.Top="3" IsHitTestVisible="False"/>
+                    </Canvas>
+                </Grid>
+                </Viewbox>
+                <Button x:Name="PomodoroToggleBtn" Style="{StaticResource HcwGhostButton}"
+                        Height="28" MinHeight="28" MaxHeight="28" Padding="8,0"
+                        HorizontalAlignment="Center" Click="PomodoroToggle_Click"
+                        ToolTipService.ToolTip="Start / pause Pomodoro">
+                    <TextBlock x:Name="PomodoroLabel" Text="25:00 · Pomodoro"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="{StaticResource HcwMutedBrush}"/>
+                </Button>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

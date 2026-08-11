@@ -8,6 +8,9 @@ var opt = new BridgeOptions
     ProductApiKey = Environment.GetEnvironmentVariable("ESTI_PRODUCT_API_KEY") ?? "",
 };
 using var bridge = new AormsBridge(opt);
+bridge.TryImportConnectSession(overwrite: true);
 var cfg = bridge.HubConfigured();
-Console.WriteLine($"AStudio BridgeHost syncReady={cfg.SyncReady} hasToken={cfg.HasSyncToken} hub={cfg.HubUrl}");
+Console.WriteLine(
+    $"AStudio BridgeHost syncReady={cfg.SyncReady} hasToken={cfg.HasSyncToken} hub={cfg.HubUrl} " +
+    "(licence from AORMS Connect session.json)");
 Console.WriteLine("OK ProjectReference to Aorms.Bridge (D5 consume smoke).");
