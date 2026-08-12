@@ -1,6 +1,6 @@
 # AStudio desktop roadmap
 
-**Current wave:** S5a — Web chrome parity  
+**Current wave:** S6 Focus depth ✅ · next S5b installer  
 **Updated:** 2026-08-10  
 Upstream tracker: esti [ROADMAP.md](https://github.com/HolagundiWorks/esti/blob/main/docs/esti/ROADMAP.md) D-waves.  
 Open source until SaaS licensing is decided.
@@ -15,6 +15,7 @@ Open source until SaaS licensing is decided.
 | S3 | Architecture domain modules (fees, drawings, delivery) | **Done** — S3a–S3e (artifact ingest envelope) |
 | S4 | Local AI (ESTI) · publish path smoke to hub portal | **Done** |
 | S5a | Web chrome parity (ribbon · dock · taskbar · studioNav) | **Done** |
+| S6 | Focus depth — project OS lists/forms (not Consolas stubs) | **Done** |
 | S5b | Signed installer · downloads CTA | Not started (MSIX = D6) |
 
 ## S3 checklist
@@ -32,6 +33,19 @@ Open source until SaaS licensing is decided.
 | S4b | Practice **Ask ESTI** panel + Probe · mission-style system prompt | **Done** |
 | S4c | Focus project context in prompt; transcripts never synced | **Done** |
 | S4d | Hub publish path | Already via Practice Flush / Focus Publish (meta allow-list) |
+
+## S6 checklist — Focus depth
+
+| Slice | Intent | Status |
+| --- | --- | --- |
+| S6a | Projects ListView · filter · Open Focus | **Done** |
+| S6b | Focus tabs Overview · Brief · Drawings · Documents · Fees · Site | **Done** |
+| S6c | Ledgers: decisions · critical notes · documents · risks + project brief fields | **Done** |
+| S6d | Save / Publish / Flush mapped to Bridge allow-list | **Done** |
+| S6e | Home ≤4 KPIs + attention | **Done** |
+| S6f | Clients / Tasks ListView polish | **Done** |
+
+Out of S6 (stubs remain): Office Leads/Tenders/Contracts · Finance reconcile/payroll · Library · moodboard · BOQ UI · BBS-in-Focus · MSIX.
 
 ```bat
 REM optional — defaults shown

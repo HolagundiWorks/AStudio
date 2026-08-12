@@ -7,18 +7,39 @@
 
     <!--
       HCW geography · web chrome parity (1× PORTAL_CHROME — no UiDensity scale):
-      Top ribbon (brand/search/status) · Stage · floating ActionDock · floating Taskbar · Clock.
+      App title bar (OS drag) · ribbon · Stage · ActionDock · Taskbar · Clock.
       Module nav lives in the taskbar (Projects · Clients · People · Office · Finance · Admin).
     -->
     <Grid Background="{StaticResource HcwFogBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
             <!-- Floating soft ribbon (web AppRibbon inset Surface) — not flush edge bar -->
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- App bar — OS caption / drag region -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="32" Padding="12,0,140,0"
+              Background="{StaticResource HcwFogBrush}"
+              AutomationProperties.Name="App title bar">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                        IsHitTestVisible="False">
+                <BitmapIcon UriSource="ms-appx:///Assets/aorms-mark.png"
+                            Width="14" Height="14"
+                            Foreground="{StaticResource HcwAccentBrush}"/>
+                <TextBlock Text="AStudio" FontSize="12" FontWeight="SemiBold"
+                           FontFamily="{StaticResource HcwFontFamily}"
+                           Foreground="{StaticResource HcwInkBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="·" Foreground="{StaticResource HcwMutedBrush}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TitleBarText" Text="Studio" FontSize="12"
+                           FontFamily="{StaticResource HcwFontFamily}"
+                           Foreground="{StaticResource HcwMutedBrush}" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" MaxWidth="480"/>
+            </StackPanel>
+        </Grid>
+
         <!-- TOP RIBBON — NEU_RAISED · 56px face · 16px inset (web parity) -->
-        <Grid x:Name="RibbonChrome" Grid.Row="0" Height="56" Margin="16,16,16,8">
+        <Grid x:Name="RibbonChrome" Grid.Row="1" Height="56" Margin="16,8,16,8">
             <Border CornerRadius="8" Background="{StaticResource HcwNeuDarkBrush}" Margin="6,6,0,0"/>
             <Border CornerRadius="8" Background="{StaticResource HcwNeuLightBrush}" Margin="0,0,6,6"/>
             <Border CornerRadius="8" Background="{StaticResource HcwSoftBrush}">
@@ -94,7 +115,7 @@
         </Grid>
 
         <!-- STAGE + right slot -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition x:Name="RightSlotCol" Width="0"/>

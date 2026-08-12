@@ -7,7 +7,7 @@
     <AssemblyName>AStudio</AssemblyName>
     <ApplicationTitle>AStudio</ApplicationTitle>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
     <Version>0.1.0</Version>
     <Company>Human Centric Works</Company>
     <Product>AStudio</Product>
